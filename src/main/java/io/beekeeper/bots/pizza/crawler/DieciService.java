@@ -10,7 +10,14 @@ public class DieciService {
     public static final String DIECI_MENU_BASE_URL = "https://webshop.dieci.ch/c/";
     public static final String DIECI_INIT_URL = "https://webshop.dieci.ch/store/Z%C3%BCrich%20links%20der%20Limmat";
 
-    public static final String[] DIECI_PAGES = {"1/pizza", "2/pasta"};
+    public static final String[] DIECI_PAGES = {
+            "1/pizza",
+            "2/pasta",
+            "3/salate",
+            "6/getraenke",
+            "7/gelati-desserts",
+            "58/glutenfreie-pizza"
+    };
 
 
     private Map<String, String> headers;
