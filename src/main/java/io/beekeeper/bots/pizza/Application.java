@@ -1,8 +1,6 @@
 package io.beekeeper.bots.pizza;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.util.HashMap;
 import java.util.Map;
 
 public class Application {
@@ -11,6 +9,11 @@ public class Application {
 
     public static void main(String[] args) {
         PizzaBot bot = new PizzaBot(BASE_URL, API_TOKEN);
+
+
+        Map<String, Article> articles = new HashMap<>();
+        bot.setParser(new Parser(articles));
+
         bot.start();
     }
 
