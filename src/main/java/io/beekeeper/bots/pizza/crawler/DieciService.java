@@ -10,8 +10,14 @@ public class DieciService {
     public static final String DIECI_MENU_BASE_URL = "https://webshop.dieci.ch/c/";
     public static final String DIECI_INIT_URL = "https://webshop.dieci.ch/store/Z%C3%BCrich%20links%20der%20Limmat";
 
-    public static final String[] DIECI_PAGES = {"1/pizza", "2/pasta"};
-
+    public static final String[] DIECI_PAGES = {
+            "1/pizza",
+            "2/pasta",
+            "3/salate",
+            "6/getraenke",
+            "7/gelati-desserts",
+            "58/glutenfreie-pizza"
+    };
 
     private Map<String, String> headers;
 
@@ -23,6 +29,10 @@ public class DieciService {
         for (String cookie : cookies) {
             headers.put("Cookie", cookie.split(";", 2)[0]);
         }
+
+        HashMap<String, String> headersWithReferer = new HashMap<>(this.headers);
+        headersWithReferer.put("Referer", "https://webshop.dieci.ch/c/1/pizza");
+        HttpGet.get("https://webshop.dieci.ch/changeLanguage?lang=en_US", headersWithReferer);
     }
 
     public List<DieciMenuItem> fetchAllDieciPages() throws IOException {
@@ -70,7 +80,8 @@ public class DieciService {
             JsonObject rootItem = jsonElementEntry.getValue().getAsJsonObject();
             JsonObject articleGroups = rootItem.getAsJsonObject("articlegroup");
             if (articleGroups == null) {
-                System.out.println("No article groups found for: " + rootItem);
+                DieciMenuItem dieciMenuItem = new Gson().fromJson(rootItem.toString(), DieciMenuItem.class);
+                items.add(dieciMenuItem);
             } else {
                 for (Map.Entry<String, JsonElement> groupArticleEntry : articleGroups.entrySet()) {
                     DieciMenuItem dieciMenuItem = new Gson().fromJson(groupArticleEntry.getValue().toString(), DieciMenuItem.class);
