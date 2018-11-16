@@ -41,7 +41,7 @@ async function orderPizza(page, { articleId, count }) {
 }
 
 (async () => {
-    const browser = await puppeteer.launch({ headless: false });
+    const browser = await puppeteer.launch({ headless: false, args: ['--start-fullscreen'] });
     const page = await browser.newPage();
     await page.setViewport({ width: 2000, height: 1500});
     await page.goto('https://www.dieci.ch/en/index');
