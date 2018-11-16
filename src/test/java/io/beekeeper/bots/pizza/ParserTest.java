@@ -21,18 +21,6 @@ public class ParserTest {
     }
 
     @Test
-    public void testDoesNotMatchIfOnlyOneWord() {
-        Map<String, String> menu = new HashMap<>();
-        menu.put("Gorgonzola Thing", "Gorgonzola Whee");
-        menu.put("Margherita", "Margherita");
-        Parser<String> p = new Parser<>(menu);
-
-        String result = p.parse("gorgonzola");
-
-        Assert.assertEquals(null, result);
-    }
-
-    @Test
     public void testMatchesWordsNotAtStart() {
         Map<String, String> menu = new HashMap<>();
         menu.put("Gorgonzola Thing Pizza", "Gorgonzola Whee");
