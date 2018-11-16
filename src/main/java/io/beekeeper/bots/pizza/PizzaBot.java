@@ -112,6 +112,8 @@ public class PizzaBot extends ChatBot {
         for (OrderItem orderItem : orderItems) {
             builder
                     .append("\n- ")
+                    .append(orderItem.getOrdererDisplayName())
+                    .append(": ")
                     .append(orderItem.getMenuItem().getArticleName());
         }
         conversationHelper.reply(builder.toString());
@@ -133,7 +135,7 @@ public class PizzaBot extends ChatBot {
             return;
         }
 
-        orderSession.updateOrderItem(message.getUserId(), new OrderItem(itemName, menuItem));
+        orderSession.updateOrderItem(message.getUserId(), new OrderItem(message.getDisplayName(), itemName, menuItem));
 
         sendPrivateConfirmationMessageToUser(conversation, message, itemName);
     }
