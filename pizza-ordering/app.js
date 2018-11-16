@@ -5,6 +5,13 @@ const orders = [
     { articleId: 492, count: 1 }
 ];
 
+const PERSONAL_DATA = {
+    firstName: 'Beekeeper',
+    lastName: 'Beekeeper',
+    email: 'kacper.grabowski@beekeeper.io',
+    phone: '+42 121321231',
+};
+
 (async () => {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
@@ -37,7 +44,12 @@ const orders = [
     await page.waitForSelector(".goto-shopping-cart .btn", { visible: true, timeout: 5000 });
     await page.click(".goto-shopping-cart .btn");
     await page.waitForSelector('[name="order_comment"]', { visible: true, timeout: 5000 });
+    // await page.click('label[for="radio_gender_m]');
+    await page.type('#firstname', PERSONAL_DATA.firstName);
+    await page.type('#lastname', PERSONAL_DATA.lastName);
+    await page.type('#communication_email', PERSONAL_DATA.email);
+    await page.type('#communication_phonenumber', PERSONAL_DATA.phone);
+
     await page.screenshot({path: 'b.png'});
 
-    await browser.close();
 })();
