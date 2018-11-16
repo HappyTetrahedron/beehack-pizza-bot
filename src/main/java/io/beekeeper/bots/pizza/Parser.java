@@ -99,6 +99,7 @@ public class Parser<T> {
         return Normalizer.normalize(original, Normalizer.Form.NFD)
                 .replaceAll("[^\\p{ASCII}]", "")
                 .trim()
+                .toLowerCase()
                 .split(" ");
     }
 
