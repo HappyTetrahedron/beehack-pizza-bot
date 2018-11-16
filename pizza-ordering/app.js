@@ -10,6 +10,11 @@ const PERSONAL_DATA = {
     lastName: 'Beekeeper',
     email: 'kacper.grabowski@beekeeper.io',
     phone: '+42 121321231',
+    company: 'Beekeeper',
+    street: 'Hönggerstrasse',
+    postalCode: '8037',
+    city: 'Zürich',
+    buildingNumber: '65',
 };
 
 (async () => {
@@ -49,6 +54,10 @@ const PERSONAL_DATA = {
     await page.type('#lastname', PERSONAL_DATA.lastName);
     await page.type('#communication_email', PERSONAL_DATA.email);
     await page.type('#communication_phonenumber', PERSONAL_DATA.phone);
+    await page.type('input[name="customerdata[customer_companyname]"]', PERSONAL_DATA.company);
+    await page.type('#input_zip', PERSONAL_DATA.postalCode);
+    await page.type('#input_city', PERSONAL_DATA.city);
+    await page.type('#input_street', PERSONAL_DATA.street);
 
     await page.screenshot({path: 'b.png'});
 
