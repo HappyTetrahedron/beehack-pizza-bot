@@ -10,13 +10,13 @@ import java.util.Map;
 
 public class Parser<T> {
 
-    private Map<String, T> availableItems;
+    private final Map<String, T> availableItems;
 
     // Knobs to tweak parsing accuracy and strictness
-    private int min_words = 2;
-    private int min_chars_first_word = 3;
-    private int min_chars_subsequent_words = 2;
-    private int min_chars_total = 5;
+    private static final int min_words = 2;
+    private static final int min_chars_first_word = 3;
+    private static final int min_chars_subsequent_words = 2;
+    private static final int min_chars_total = 5;
 
     public Parser(Map<String, T> items) {
         this.availableItems = items;
@@ -88,8 +88,7 @@ public class Parser<T> {
         for (int i = 0; i < Math.min(a.length(), b.length()); i++) {
             if (a.charAt(i) == b.charAt(i)) {
                 res = res + a.charAt(i);
-            }
-            else break;
+            } else break;
         }
         return res;
     }
