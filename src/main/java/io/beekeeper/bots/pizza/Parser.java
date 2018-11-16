@@ -1,5 +1,6 @@
 package io.beekeeper.bots.pizza;
 
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
 import lombok.AllArgsConstructor;
 
 import java.text.Normalizer;
@@ -101,12 +102,18 @@ public class Parser<T> {
                 .split(" ");
     }
 
-    @AllArgsConstructor
     private class MatchData implements Comparable<MatchData> {
         int len;
         int sum;
         int index;
         String productName;
+
+        public MatchData(int len, int sum, int index, String productName) {
+            this.len = len;
+            this.sum = sum;
+            this.index = index;
+            this.productName = productName;
+        }
 
         @Override
         public int compareTo(MatchData that) {
