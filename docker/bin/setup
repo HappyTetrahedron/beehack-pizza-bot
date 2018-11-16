@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+base=$(dirname $0)
+pwd=$(pwd)
+
+# Go into workspace folder
+cd $base/../..
+
+# Build java files
+./gradlew distTar
+
+docker-compose down
+docker-compose build
