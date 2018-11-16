@@ -8,11 +8,13 @@ import io.beekeeper.sdk.ChatBot;
 import io.beekeeper.sdk.exception.BeekeeperException;
 import io.beekeeper.sdk.model.Conversation;
 import io.beekeeper.sdk.model.ConversationMessage;
+import lombok.Getter;
 
 public class PizzaBot extends ChatBot {
 
     private final Pattern ITEM_ORDER_PATTERN = Pattern.compile("^/order\\s(.*)");
 
+    @Getter
     private OrderSession orderSession = null;
     private Parser parser = null;
 
@@ -50,7 +52,7 @@ public class PizzaBot extends ChatBot {
         }
     }
 
-    private void processGroupMessage(Conversation conversation, ConversationMessage message, ConversationHelper conversationHelper) throws BeekeeperException {
+    void processGroupMessage(Conversation conversation, ConversationMessage message, ConversationHelper conversationHelper) throws BeekeeperException {
         // Case 1: Order is started
         if (message.getText().equals("/start")) {
             startOrder(conversation, conversationHelper);
@@ -117,9 +119,8 @@ public class PizzaBot extends ChatBot {
         }
 
         orderSession.updateOrderItem(message.getUserId(), new OrderItem(itemName));
-        getSdk().getConversations().sendMessageToUser(message.getUsername(), "Your order for \"" + conversation.getName() + "\": " + itemName).execute();
+        sendPrivateMessageToUser(conversation, message, itemName);
     }
-
 
     private void startOrder(Conversation conversation, ConversationHelper conversationHelper) throws BeekeeperException {
         if (orderSession != null) {
@@ -145,4 +146,7 @@ public class PizzaBot extends ChatBot {
         // Case 4: Correction / cancellation (1-on-1)
     }
 
+    protected void sendPrivateMessageToUser(Conversation conversation, ConversationMessage message, String itemName) throws BeekeeperException {
+        getSdk().getConversations().sendMessageToUser(message.getUsername(), "Your order for \"" + conversation.getName() + "\": " + itemName).execute();
+    }
 }
