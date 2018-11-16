@@ -109,14 +109,28 @@ public class PizzaBot extends ChatBot {
             return;
         }
         StringBuilder builder = new StringBuilder("Current orders:\n");
+        float total = 0;
         for (OrderItem orderItem : orderItems) {
             builder
                     .append("\n- ")
                     .append(orderItem.getOrdererDisplayName())
                     .append(": ")
-                    .append(orderItem.getMenuItem().getArticleName());
+                    .append(orderItem.getMenuItem().getArticleName())
+                    .append(" (")
+                    .append(formatPrice(orderItem.getMenuItem().getPrice()))
+                    .append(")");
+
+            total += orderItem.getMenuItem().getPrice();
         }
+        builder.append("\n")
+                .append("Total: ")
+                .append(formatPrice(total));
+
         conversationHelper.reply(builder.toString());
+    }
+
+    private String formatPrice(float price) {
+        return String.format("%.2f", price);
     }
 
     private void processItemAdding(Conversation conversation, ConversationMessage message, String itemName, ConversationHelper conversationHelper) throws BeekeeperException {

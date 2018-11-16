@@ -23,8 +23,16 @@ public class DieciMenuItem {
     @SerializedName("articlepricing_price")
     private String articlePrice;
 
+    public float getPrice() {
+        try {
+            return Float.parseFloat(articlePrice);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
     public String getArticlePrice() {
-            return articlePrice;
+        return articlePrice;
     }
 
     public String getArticleName() {
