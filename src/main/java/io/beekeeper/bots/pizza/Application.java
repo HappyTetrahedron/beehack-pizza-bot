@@ -29,7 +29,7 @@ public class Application {
         List<DieciMenuItem> result = dieci.fetchAllDieciPages();
         System.out.println(result.size() + " menu items found");
         Map<String, DieciMenuItem> mapItems = result.stream().collect(Collectors.toMap(
-                DieciMenuItem::getArticleName,
+                DieciMenuItem::getKey,
                 item -> item
         ));
 

@@ -14,9 +14,21 @@ public class DieciMenuItem {
     private String articleNumber;
     @SerializedName("articlepicture_path")
     private String articlePictureUrl;
+    @SerializedName("article_articlegroup_abbreviation")
+    private String articleGroupAbbreviation;
+    @SerializedName("articlepricing_price")
+    private String articlePrice;
+
+    public String getArticlePrice() {
+            return articlePrice;
+    }
 
     public String getArticleName() {
         return articleName;
+    }
+
+    public String getArticleGroupAbbreviation() {
+        return articleGroupAbbreviation;
     }
 
     public String getArticleId() {
@@ -33,5 +45,9 @@ public class DieciMenuItem {
 
     public String getArticlePictureUrl() {
         return articlePictureUrl;
+    }
+
+    public String getKey() {
+        return articleName + " " + articleGroupAbbreviation;
     }
 }

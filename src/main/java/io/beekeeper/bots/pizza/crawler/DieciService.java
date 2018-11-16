@@ -67,10 +67,17 @@ public class DieciService {
         JsonObject element = parser.parse(json).getAsJsonObject();
 
         for (Map.Entry<String, JsonElement> jsonElementEntry : element.entrySet()) {
-            String jsonItem = jsonElementEntry.getValue().getAsJsonObject().toString();
-            System.out.println("jsonItem = " + jsonItem);
-            DieciMenuItem dieciMenuItem = new Gson().fromJson(jsonItem, DieciMenuItem.class);
-            items.add(dieciMenuItem);
+            JsonObject rootItem = jsonElementEntry.getValue().getAsJsonObject();
+            JsonObject articleGroups = rootItem.getAsJsonObject("articlegroup");
+            if (articleGroups == null) {
+                System.out.println("No article groups found for: " + rootItem);
+            } else {
+                for (Map.Entry<String, JsonElement> groupArticleEntry : articleGroups.entrySet()) {
+                    DieciMenuItem dieciMenuItem = new Gson().fromJson(groupArticleEntry.getValue().toString(), DieciMenuItem.class);
+                    items.add(dieciMenuItem);
+                }
+            }
+
         }
 
         return items;
