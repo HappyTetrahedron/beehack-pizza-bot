@@ -9,7 +9,7 @@ const PERSONAL_DATA = {
     firstName: 'Beekeeper',
     lastName: 'Beekeeper',
     email: 'kacper.grabowski@beekeeper.io',
-    phone: '+42 121321231',
+    phone: '+41 78 123 45 67',
     company: 'Beekeeper',
     street: 'Hönggerstrasse',
     postalCode: '8037',
