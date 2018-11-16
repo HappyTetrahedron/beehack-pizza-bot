@@ -25,7 +25,6 @@ async function orderPizza(page, { articleId, count }) {
     await addToCartButton.click();
     await page.screenshot({path: `${articleId}.png`});
     console.log('Done', articleId);
-
 }
 
 (async () => {
@@ -41,8 +40,4 @@ async function orderPizza(page, { articleId, count }) {
     return orders.reduce((promiseChain, order) => {
         return promiseChain.then(() => orderPizza(page, order));
     }, Promise.resolve());
-
-    // await Promise.all(orders.map());
-
-    // await browser.close();
 })();
