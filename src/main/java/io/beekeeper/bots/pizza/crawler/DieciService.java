@@ -8,20 +8,21 @@ import java.util.*;
 public class DieciService {
 
     public static final String DIECI_MENU_BASE_URL = "https://webshop.dieci.ch/c/";
+    public static final String DIECI_INIT_URL = "https://webshop.dieci.ch/store/Z%C3%BCrich%20links%20der%20Limmat";
+
     public static final String[] DIECI_PAGES = {"1/pizza", "2/pasta"};
 
 
     private Map<String, String> headers;
 
     public void initializeSession() throws IOException {
-        HttpGet.HttpGetResponse response = HttpGet.get(DIECI_MENU_BASE_URL);
+        HttpGet.HttpGetResponse response = HttpGet.get(DIECI_INIT_URL);
         List<String> cookies = response.getHeaders().get("Set-Cookie");
 
         this.headers = new HashMap<>();
         for (String cookie : cookies) {
             headers.put("Cookie", cookie.split(";", 2)[0]);
         }
-        headers.put("Cookie", "PHPSESSID=cdlrlor4plhke8rd7cqiceueg2");
     }
 
     public List<DieciMenuItem> fetchAllDieciPages() throws IOException {

@@ -27,7 +27,7 @@ public class Application {
         DieciService dieci = new DieciService();
         dieci.initializeSession();
         List<DieciMenuItem> result = dieci.fetchAllDieciPages();
-
+        System.out.println(result.size() + " menu items found");
         Map<String, DieciMenuItem> mapItems = result.stream().collect(Collectors.toMap(
                 DieciMenuItem::getArticleName,
                 item -> item
