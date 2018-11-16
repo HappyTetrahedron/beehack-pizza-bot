@@ -38,12 +38,12 @@ public class Parser<T> {
             for (int o = 0; o < orderParts.length; o++) {
                 for (int n = 0; n < nameParts.length; n++) {
 
-                    String prefix = commonPrefix(orderParts[0], nameParts[n]);
+                    String prefix = commonPrefix(orderParts[o], nameParts[n]);
                     if (prefix.length() >= Math.min(min_chars_first_word, nameParts[n].length())) {
                         // Forward scanning mode engage!
                         List<String> matches = new ArrayList<>();
                         for (int nn = n; nn < nameParts.length; nn++) {
-                            if (nn < orderParts.length) {
+                            if (o - n + nn < orderParts.length) {
                                 String nextPrefix = commonPrefix(nameParts[nn], orderParts[o - n + nn]);
                                 if (nextPrefix.length() >= Math.min(min_chars_subsequent_words, nameParts[nn].length())) {
                                     matches.add(nextPrefix);
@@ -118,9 +118,9 @@ public class Parser<T> {
 
         @Override
         public int compareTo(MatchData that) {
-            int lens = Integer.compare(this.len, that.len);
+            int lens = Integer.compare(that.len, this.len);
             if (lens != 0) return lens;
-            return Integer.compare(this.sum, that.sum);
+            return Integer.compare(that.sum, this.sum);
         }
     }
 }
