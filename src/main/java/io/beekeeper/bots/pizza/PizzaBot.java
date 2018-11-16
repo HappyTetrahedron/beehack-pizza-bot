@@ -98,7 +98,6 @@ public class PizzaBot extends ChatBot {
             return;
         }
 
-
         Collection<OrderItem> orderItems = orderSession.getOrderItems();
         if (orderItems.isEmpty()) {
             conversationHelper.reply("Nothing was added to this order yet.");
@@ -106,7 +105,9 @@ public class PizzaBot extends ChatBot {
         }
         StringBuilder builder = new StringBuilder("Current orders:\n");
         for (OrderItem orderItem : orderItems) {
-            builder.append("\n- " + orderItem.getItemName());
+            builder
+                    .append("\n- ")
+                    .append(orderItem.getMenuItem().getArticleName());
         }
         conversationHelper.reply(builder.toString());
     }
@@ -117,8 +118,19 @@ public class PizzaBot extends ChatBot {
             return;
         }
 
-        orderSession.updateOrderItem(message.getUserId(), new OrderItem(itemName));
-        getSdk().getConversations().sendMessageToUser(message.getUsername(), "Your order for \"" + conversation.getName() + "\": " + itemName).execute();
+        if (parser == null) {
+            return;
+        }
+
+        DieciMenuItem menuItem = parser.parse(itemName);
+        if (menuItem == null) {
+            getSdk().getConversations().sendMessageToUser(message.getUsername(), "No matching pizza found for: " + itemName).execute();
+            return;
+        }
+
+        orderSession.updateOrderItem(message.getUserId(), new OrderItem(itemName, menuItem));
+
+        getSdk().getConversations().sendMessageToUser(message.getUsername(), "Your order for \"" + conversation.getName() + "\": " + menuItem.getArticleName()).execute();
     }
 
 
