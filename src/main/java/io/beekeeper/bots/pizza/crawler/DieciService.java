@@ -19,7 +19,6 @@ public class DieciService {
             "58/glutenfreie-pizza"
     };
 
-
     private Map<String, String> headers;
 
     public void initializeSession() throws IOException {
@@ -30,6 +29,10 @@ public class DieciService {
         for (String cookie : cookies) {
             headers.put("Cookie", cookie.split(";", 2)[0]);
         }
+
+        HashMap<String, String> headersWithReferer = new HashMap<>(this.headers);
+        headersWithReferer.put("Referer", "https://webshop.dieci.ch/c/1/pizza");
+        HttpGet.get("https://webshop.dieci.ch/changeLanguage?lang=en_US", headersWithReferer);
     }
 
     public List<DieciMenuItem> fetchAllDieciPages() throws IOException {
