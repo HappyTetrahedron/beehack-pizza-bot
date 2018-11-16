@@ -70,7 +70,8 @@ public class DieciService {
             JsonObject rootItem = jsonElementEntry.getValue().getAsJsonObject();
             JsonObject articleGroups = rootItem.getAsJsonObject("articlegroup");
             if (articleGroups == null) {
-                System.out.println("No article groups found for: " + rootItem);
+                DieciMenuItem dieciMenuItem = new Gson().fromJson(rootItem.toString(), DieciMenuItem.class);
+                items.add(dieciMenuItem);
             } else {
                 for (Map.Entry<String, JsonElement> groupArticleEntry : articleGroups.entrySet()) {
                     DieciMenuItem dieciMenuItem = new Gson().fromJson(groupArticleEntry.getValue().toString(), DieciMenuItem.class);
