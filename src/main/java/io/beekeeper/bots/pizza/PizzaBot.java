@@ -126,7 +126,7 @@ public class PizzaBot extends ChatBot {
             return;
         }
 
-        orderSession.updateOrderItem(message.getUserId(), null);
+        orderSession.removeOrderItems(message.getUserId());
         String text = "Removed order for " + message.getDisplayName() + ".";
         sendConfirmationMessage(conversation, message, text);
 
@@ -185,7 +185,7 @@ public class PizzaBot extends ChatBot {
         return String.format("%.2f", price);
     }
 
-    private void processItemAdding(Conversation conversation, ConversationMessage message, String itemName, ConversationHelper conversationHelper) throws BeekeeperException {
+    private void processItemAdding(Conversation conversation, ConversationMessage message, String originalText, ConversationHelper conversationHelper) throws BeekeeperException {
         if (orderSession == null || (conversation.isGroupConversation() && orderSession.getConversation().getId() != conversation.getId())) {
             conversationHelper.reply("There is no ongoing order.");
             return;
@@ -195,17 +195,34 @@ public class PizzaBot extends ChatBot {
             return;
         }
 
-        DieciMenuItem menuItem = parser.parse(itemName);
-        if (menuItem == null) {
-            sendItemNotFoundMessageToUser(message, itemName);
-            return;
-        }
+        String[] rawItems = originalText.split(";");
 
         boolean hadOrderItem = orderSession.hasOrderItem(message.getUserId());
+        orderSession.removeOrderItems(message.getUserId());
 
-        orderSession.updateOrderItem(message.getUserId(), new OrderItem(message.getDisplayName(), itemName, menuItem));
+        StringBuilder stringBuilder = new StringBuilder();
+        boolean first = true;
 
-        String text = hadOrderItem ? "Updated order to \"" + menuItem.getArticleName() + "\" for " + message.getDisplayName() : "Added \"" + menuItem.getArticleName() + "\" to the order for " + message.getDisplayName();
+        for (String rawItem : rawItems) {
+            DieciMenuItem menuItem = parser.parse(rawItem);
+            if (menuItem == null) {
+                sendItemNotFoundMessageToUser(message, rawItem);
+                continue;
+            }
+
+            orderSession.addOrderItem(message.getUserId(), new OrderItem(message.getDisplayName(), rawItem, menuItem));
+
+            if (first) {
+                first = false;
+            } else {
+                stringBuilder.append(", ");
+            }
+            stringBuilder.append(menuItem.getArticleName());
+        }
+
+        String orderSummary = stringBuilder.toString();
+
+        String text = hadOrderItem ? "Updated order to \"" + orderSummary + "\" for " + message.getDisplayName() : "Added \"" + orderSummary + "\" to the order for " + message.getDisplayName();
         sendConfirmationMessage(conversation, message, text);
     }
 
