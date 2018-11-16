@@ -78,11 +78,11 @@ public class PizzaBot extends ChatBot {
 
     private void showHelp(ConversationHelper conversationHelper) throws BeekeeperException {
         String helpText =
-                "/help                show this help\n" +
-                "/start               start a new pizza order\n" +
-                "/start               cancel the current pizza order\n" +
-                "/orders              show the currently registerd orders\n" +
-                "/order [pizza]       show this help\n";
+                "/help show this help\n" +
+                "/start start a new pizza order\n" +
+                "/cancel cancel the current pizza order\n" +
+                "/orders show the currently registerd orders\n" +
+                "/order [pizza] add a pizza with given name to the order\n";
         conversationHelper.reply(helpText);
     }
 
