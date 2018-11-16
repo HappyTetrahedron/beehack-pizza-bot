@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 
 const orders = [
-    { articleId: 1, count: 1 },
+    // { articleId: 1, count: 1 },
     { articleId: 492, count: 1 }
 ];
 
@@ -26,13 +26,18 @@ const orders = [
         const addToCartButton = await productElement.$(".article-price-and-choose-btn :not(.choose-toppings) .choose-article");
 
         await dropdown.click()
-        await page.waitForSelector(sizeDropdownOptionSelector, { visible: true, timeout: 2000 });
+        await page.waitForSelector(sizeDropdownOptionSelector, { visible: true, timeout: 5000 });
         await sizeDropdownOption.click();
-        await page.screenshot({path: 'b.png'});
         await addToCartButton.click();
         await page.screenshot({path: `${articleId}.png`});
-
+        await page.waitForSelector(".article-item", { visible: true, timeout: 5000 });
     }));
+    await page.waitForSelector(".Reached_minOrderPrice", { visible: true, timeout: 5000 });
+    await page.click(".Reached_minOrderPrice");
+    await page.waitForSelector(".goto-shopping-cart .btn", { visible: true, timeout: 5000 });
+    await page.click(".goto-shopping-cart .btn");
+    await page.waitForSelector('[name="order_comment"]', { visible: true, timeout: 5000 });
+    await page.screenshot({path: 'b.png'});
 
     await browser.close();
 })();
