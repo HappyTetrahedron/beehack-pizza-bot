@@ -120,7 +120,7 @@ public class PizzaBot extends ChatBot {
     }
 
     private void processItemAdding(Conversation conversation, ConversationMessage message, String itemName, ConversationHelper conversationHelper) throws BeekeeperException {
-        if (orderSession == null || orderSession.getConversation().getId() != conversation.getId()) {
+        if (orderSession == null || (conversation.isGroupConversation() && orderSession.getConversation().getId() != conversation.getId())) {
             conversationHelper.reply("There is no ongoing order.");
             return;
         }
@@ -137,7 +137,7 @@ public class PizzaBot extends ChatBot {
 
         orderSession.updateOrderItem(message.getUserId(), new OrderItem(message.getDisplayName(), itemName, menuItem));
 
-        sendPrivateConfirmationMessageToUser(conversation, message, menuItem.getArticleName());
+        sendConfirmationMessage(conversation, message, menuItem.getArticleName());
     }
 
     private void startOrder(Conversation conversation, ConversationHelper conversationHelper) throws BeekeeperException {
@@ -164,8 +164,8 @@ public class PizzaBot extends ChatBot {
         // Case 4: Correction / cancellation (1-on-1)
     }
 
-    protected void sendPrivateConfirmationMessageToUser(Conversation conversation, ConversationMessage message, String itemName) throws BeekeeperException {
-        getSdk().getConversations().sendMessageToUser(message.getUsername(), "Your order for \"" + conversation.getName() + "\": " + itemName).execute();
+    protected void sendConfirmationMessage(Conversation conversation, ConversationMessage message, String itemName) throws BeekeeperException {
+        getSdk().getConversations().sendEventMessage(conversation.getId(), "Added \"" + itemName + "\" to the order for " + message.getDisplayName()).execute();
     }
 
     private void sendItemNotFoundMessageToUser(ConversationMessage message, String itemName) throws BeekeeperException {

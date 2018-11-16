@@ -1,5 +1,10 @@
 package io.beekeeper.bots.pizza;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Test;
+
 import io.beekeeper.bots.pizza.crawler.DieciMenuItem;
 import io.beekeeper.sdk.ChatBot;
 import io.beekeeper.sdk.exception.BeekeeperException;
@@ -7,10 +12,6 @@ import io.beekeeper.sdk.model.Conversation;
 import io.beekeeper.sdk.model.ConversationMessage;
 import io.beekeeper.sdk.model.MessageType;
 import io.beekeeper.sdk.params.SendMessageParams;
-import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static junit.framework.TestCase.assertTrue;
 
@@ -46,7 +47,7 @@ public class PizzaBotTest {
             super(tenantUrl, apiToken);
         }
         @Override
-        protected void sendPrivateConfirmationMessageToUser(Conversation conversation, ConversationMessage message, String itemName) throws BeekeeperException {
+        protected void sendConfirmationMessage(Conversation conversation, ConversationMessage message, String itemName) throws BeekeeperException {
             return;
         }
     }
