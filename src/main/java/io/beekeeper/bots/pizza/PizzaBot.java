@@ -81,6 +81,11 @@ public class PizzaBot extends ChatBot {
             return;
         }
 
+        if (message.getText().equals("/submit")) {
+            submitOrder(conversation, conversationHelper);
+            return;
+        }
+
         // Case 5: Help commands / get list of available items
         if (message.getText().equals("/orders")) {
             showOrders(conversation, conversationHelper);
@@ -90,6 +95,29 @@ public class PizzaBot extends ChatBot {
         if (message.getText().equals("/help")) {
             showHelp(conversationHelper);
         }
+    }
+
+    private void submitOrder(Conversation conversation, ConversationHelper conversationHelper) throws BeekeeperException {
+        if (orderSession == null || orderSession.getConversation().getId() != conversation.getId()) {
+            conversationHelper.reply("There is no ongoing order.");
+            return;
+        }
+
+        Collection<OrderItem> orderItems = orderSession.getOrderItems();
+        if (orderItems.isEmpty()) {
+            conversationHelper.reply("Nothing was added to this order yet.");
+            return;
+        }
+
+        orderSession = null;
+
+        StringBuilder builder = new StringBuilder()
+                .append("Order submitted. Your food will arrive in approximately 40 minutes.")
+                .append("\n\n\n")
+                .append("Order Summary:")
+                .append("\n")
+                .append(getSummary(orderItems));
+        conversationHelper.reply(builder.toString());
     }
 
     private void processRemovingItem(Conversation conversation, ConversationMessage message, ConversationHelper conversationHelper) throws BeekeeperException {
@@ -111,7 +139,8 @@ public class PizzaBot extends ChatBot {
                         "/cancel : cancel the current pizza order\n" +
                         "/orders : show the currently registered orders\n" +
                         "/order [pizza] : add a pizza with given name to the order\n" +
-                        "/remove : remove your order";
+                        "/remove : remove your order\n" +
+                        "/submit : submit the order to Dieci";
         conversationHelper.reply(helpText);
     }
 
@@ -126,7 +155,11 @@ public class PizzaBot extends ChatBot {
             conversationHelper.reply("Nothing was added to this order yet.");
             return;
         }
-        StringBuilder builder = new StringBuilder("Current orders:\n");
+        conversationHelper.reply("Current orders:\n" + getSummary(orderItems));
+    }
+
+    private String getSummary(Collection<OrderItem> orderItems) {
+        StringBuilder builder = new StringBuilder();
         float total = 0;
         for (OrderItem orderItem : orderItems) {
             builder
@@ -145,7 +178,7 @@ public class PizzaBot extends ChatBot {
                 .append("Total: ")
                 .append(formatPrice(total));
 
-        conversationHelper.reply(builder.toString());
+        return builder.toString();
     }
 
     private String formatPrice(float price) {
