@@ -4,25 +4,29 @@ import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.beekeeper.bots.pizza.crawler.DieciMenuItem;
 import io.beekeeper.sdk.ChatBot;
 import io.beekeeper.sdk.exception.BeekeeperException;
 import io.beekeeper.sdk.model.Conversation;
 import io.beekeeper.sdk.model.ConversationMessage;
-import lombok.Getter;
+
 
 public class PizzaBot extends ChatBot {
 
     private final Pattern ITEM_ORDER_PATTERN = Pattern.compile("^/order\\s(.*)");
 
-    @Getter
+    public OrderSession getOrderSession() {
+        return orderSession;
+    }
+
     private OrderSession orderSession = null;
-    private Parser parser = null;
+    private Parser<DieciMenuItem> parser = null;
 
     public PizzaBot(String tenantUrl, String apiToken) {
         super(tenantUrl, apiToken);
     }
 
-    public void setParser(Parser parser) {
+    public void setParser(Parser<DieciMenuItem> parser) {
         this.parser = parser;
     }
 
@@ -99,7 +103,6 @@ public class PizzaBot extends ChatBot {
             return;
         }
 
-
         Collection<OrderItem> orderItems = orderSession.getOrderItems();
         if (orderItems.isEmpty()) {
             conversationHelper.reply("Nothing was added to this order yet.");
@@ -107,7 +110,9 @@ public class PizzaBot extends ChatBot {
         }
         StringBuilder builder = new StringBuilder("Current orders:\n");
         for (OrderItem orderItem : orderItems) {
-            builder.append("\n- " + orderItem.getItemName());
+            builder
+                    .append("\n- ")
+                    .append(orderItem.getMenuItem().getArticleName());
         }
         conversationHelper.reply(builder.toString());
     }
@@ -118,8 +123,19 @@ public class PizzaBot extends ChatBot {
             return;
         }
 
-        orderSession.updateOrderItem(message.getUserId(), new OrderItem(itemName));
-        sendPrivateMessageToUser(conversation, message, itemName);
+        if (parser == null) {
+            return;
+        }
+
+        DieciMenuItem menuItem = parser.parse(itemName);
+        if (menuItem == null) {
+            sendItemNotFoundMessageToUser(message, itemName);
+            return;
+        }
+
+        orderSession.updateOrderItem(message.getUserId(), new OrderItem(itemName, menuItem));
+
+        sendPrivateConfirmationMessageToUser(conversation, message, itemName);
     }
 
     private void startOrder(Conversation conversation, ConversationHelper conversationHelper) throws BeekeeperException {
@@ -146,7 +162,11 @@ public class PizzaBot extends ChatBot {
         // Case 4: Correction / cancellation (1-on-1)
     }
 
-    protected void sendPrivateMessageToUser(Conversation conversation, ConversationMessage message, String itemName) throws BeekeeperException {
+    protected void sendPrivateConfirmationMessageToUser(Conversation conversation, ConversationMessage message, String itemName) throws BeekeeperException {
         getSdk().getConversations().sendMessageToUser(message.getUsername(), "Your order for \"" + conversation.getName() + "\": " + itemName).execute();
+    }
+
+    private void sendItemNotFoundMessageToUser(ConversationMessage message, String itemName) throws BeekeeperException {
+        getSdk().getConversations().sendMessageToUser(message.getUsername(), "No matching pizza found for: " + itemName).execute();
     }
 }

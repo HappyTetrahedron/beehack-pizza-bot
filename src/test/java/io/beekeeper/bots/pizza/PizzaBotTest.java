@@ -1,5 +1,6 @@
 package io.beekeeper.bots.pizza;
 
+import io.beekeeper.bots.pizza.crawler.DieciMenuItem;
 import io.beekeeper.sdk.ChatBot;
 import io.beekeeper.sdk.exception.BeekeeperException;
 import io.beekeeper.sdk.model.Conversation;
@@ -16,10 +17,10 @@ import static junit.framework.TestCase.assertTrue;
 public class PizzaBotTest {
     @Test
     public void test() throws BeekeeperException {
-        Map<String, String> menu = new HashMap<>();
-        menu.put("Gorgonzola Pizza", "Gorgonzola Whee");
-        menu.put("Margherita", "Margherita");
-        Parser<String> parser = new Parser<>(menu);
+        Map<String, DieciMenuItem> menu = new HashMap<>();
+        menu.put("Gorgonzola Pizza", new DieciMenuItem("Gorgonzola Whee"));
+        menu.put("Margherita",  new DieciMenuItem("Margherita"));
+        Parser<DieciMenuItem> parser = new Parser<>(menu);
         PizzaBot unit = new TestPizzaBot("https://pizza.dev.beekeeper.io", "token");
         unit.setParser(parser);
 
@@ -45,7 +46,7 @@ public class PizzaBotTest {
             super(tenantUrl, apiToken);
         }
         @Override
-        protected void sendPrivateMessageToUser(Conversation conversation, ConversationMessage message, String itemName) throws BeekeeperException {
+        protected void sendPrivateConfirmationMessageToUser(Conversation conversation, ConversationMessage message, String itemName) throws BeekeeperException {
             return;
         }
     }
