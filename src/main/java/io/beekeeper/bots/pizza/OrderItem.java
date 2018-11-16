@@ -4,16 +4,22 @@ import io.beekeeper.bots.pizza.crawler.DieciMenuItem;
 
 public class OrderItem {
 
-    OrderItem(String originalText, DieciMenuItem menuItem) {
+    OrderItem(String ordererDisplayName, String originalText, DieciMenuItem menuItem) {
+        this.ordererDisplayName = ordererDisplayName;
         this.originalText = originalText;
         this.menuItem = menuItem;
     }
 
-    private String originalText;
-    private DieciMenuItem menuItem;
+    private final String originalText;
+    private final String ordererDisplayName;
+    private final DieciMenuItem menuItem;
 
     public String getOriginalText() {
         return originalText;
+    }
+
+    public String getOrdererDisplayName() {
+        return ordererDisplayName;
     }
 
     public DieciMenuItem getMenuItem() {

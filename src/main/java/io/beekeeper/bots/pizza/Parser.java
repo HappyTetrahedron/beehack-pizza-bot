@@ -12,7 +12,7 @@ public class Parser<T> {
     private final Map<String, T> availableItems;
 
     // Knobs to tweak parsing accuracy and strictness
-    private static final int min_words = 2;
+    private static final int min_words = 1;
     private static final int min_chars_first_word = 3;
     private static final int min_chars_subsequent_words = 2;
     private static final int min_chars_total = 5;

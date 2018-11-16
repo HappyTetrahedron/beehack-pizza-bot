@@ -10,9 +10,14 @@ import io.beekeeper.sdk.exception.BeekeeperException;
 import io.beekeeper.sdk.model.Conversation;
 import io.beekeeper.sdk.model.ConversationMessage;
 
+
 public class PizzaBot extends ChatBot {
 
     private final Pattern ITEM_ORDER_PATTERN = Pattern.compile("^/order\\s(.*)");
+
+    public OrderSession getOrderSession() {
+        return orderSession;
+    }
 
     private OrderSession orderSession = null;
     private Parser<DieciMenuItem> parser = null;
@@ -51,7 +56,7 @@ public class PizzaBot extends ChatBot {
         }
     }
 
-    private void processGroupMessage(Conversation conversation, ConversationMessage message, ConversationHelper conversationHelper) throws BeekeeperException {
+    void processGroupMessage(Conversation conversation, ConversationMessage message, ConversationHelper conversationHelper) throws BeekeeperException {
         // Case 1: Order is started
         if (message.getText().equals("/start")) {
             startOrder(conversation, conversationHelper);
@@ -87,7 +92,7 @@ public class PizzaBot extends ChatBot {
                 "/help show this help\n" +
                         "/start start a new pizza order\n" +
                         "/cancel cancel the current pizza order\n" +
-                        "/orders show the currently registerd orders\n" +
+                        "/orders show the currently registered orders\n" +
                         "/order [pizza] add a pizza with given name to the order\n";
         conversationHelper.reply(helpText);
     }
@@ -107,13 +112,15 @@ public class PizzaBot extends ChatBot {
         for (OrderItem orderItem : orderItems) {
             builder
                     .append("\n- ")
+                    .append(orderItem.getOrdererDisplayName())
+                    .append(": ")
                     .append(orderItem.getMenuItem().getArticleName());
         }
         conversationHelper.reply(builder.toString());
     }
 
     private void processItemAdding(Conversation conversation, ConversationMessage message, String itemName, ConversationHelper conversationHelper) throws BeekeeperException {
-        if (orderSession == null || orderSession.getConversation().getId() != conversation.getId()) {
+        if (orderSession == null || (conversation.isGroupConversation() && orderSession.getConversation().getId() != conversation.getId())) {
             conversationHelper.reply("There is no ongoing order.");
             return;
         }
@@ -124,15 +131,14 @@ public class PizzaBot extends ChatBot {
 
         DieciMenuItem menuItem = parser.parse(itemName);
         if (menuItem == null) {
-            getSdk().getConversations().sendMessageToUser(message.getUsername(), "No matching pizza found for: " + itemName).execute();
+            sendItemNotFoundMessageToUser(message, itemName);
             return;
         }
 
-        orderSession.updateOrderItem(message.getUserId(), new OrderItem(itemName, menuItem));
+        orderSession.updateOrderItem(message.getUserId(), new OrderItem(message.getDisplayName(), itemName, menuItem));
 
-        getSdk().getConversations().sendMessageToUser(message.getUsername(), "Your order for \"" + conversation.getName() + "\": " + menuItem.getArticleName()).execute();
+        sendConfirmationMessage(conversation, message, menuItem.getArticleName());
     }
-
 
     private void startOrder(Conversation conversation, ConversationHelper conversationHelper) throws BeekeeperException {
         if (orderSession != null) {
@@ -141,7 +147,7 @@ public class PizzaBot extends ChatBot {
         }
 
         orderSession = new OrderSession(conversation);
-        conversationHelper.reply("Order started");
+        conversationHelper.reply("Order started. Add items to the order by sending a message starting with /order, e.g., /order Quattro formaggi");
     }
 
     private void cancelOrder(Conversation conversation, ConversationHelper conversationHelper) throws BeekeeperException {
@@ -158,4 +164,11 @@ public class PizzaBot extends ChatBot {
         // Case 4: Correction / cancellation (1-on-1)
     }
 
+    protected void sendConfirmationMessage(Conversation conversation, ConversationMessage message, String itemName) throws BeekeeperException {
+        getSdk().getConversations().sendEventMessage(conversation.getId(), "Added \"" + itemName + "\" to the order for " + message.getDisplayName()).execute();
+    }
+
+    private void sendItemNotFoundMessageToUser(ConversationMessage message, String itemName) throws BeekeeperException {
+        getSdk().getConversations().sendMessageToUser(message.getUsername(), "No matching pizza found for: " + itemName).execute();
+    }
 }
