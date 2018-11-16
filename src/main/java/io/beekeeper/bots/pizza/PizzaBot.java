@@ -123,6 +123,7 @@ public class PizzaBot extends ChatBot {
             total += orderItem.getMenuItem().getPrice();
         }
         builder.append("\n")
+                .append("\n")
                 .append("Total: ")
                 .append(formatPrice(total));
 
