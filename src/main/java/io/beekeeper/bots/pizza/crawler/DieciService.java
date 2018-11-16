@@ -68,6 +68,7 @@ public class DieciService {
 
         for (Map.Entry<String, JsonElement> jsonElementEntry : element.entrySet()) {
             String jsonItem = jsonElementEntry.getValue().getAsJsonObject().toString();
+            System.out.println("jsonItem = " + jsonItem);
             DieciMenuItem dieciMenuItem = new Gson().fromJson(jsonItem, DieciMenuItem.class);
             items.add(dieciMenuItem);
         }
