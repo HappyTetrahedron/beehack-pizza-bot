@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+    id 'war'
+    id 'application'
+}
+
+group 'beekeeper'
+version '1.0'
+
+mainClassName = 'io.beekeeper.bots.pizza.Application'
+sourceCompatibility = 1.8
+applicationDefaultJvmArgs = ["-Xms64M", "-Xmx128M"]
+
+ext {
+    beekeeper_sdk_version = "2.1.3"
+}
+
+repositories {
+    jcenter()
+    mavenCentral()
+    maven { url 'https://s3-eu-west-1.amazonaws.com/beekeeper-marketplace-sdk/maven2/release/' }
+}
+
+
+dependencies {
+    compile 'org.codehaus.groovy:groovy-all:2.3.11'
+
+    // Failsafe
+    implementation 'net.jodah:failsafe:1.0.5'
+
+    // Beekeeper SDKs
+    implementation "io.beekeeper:beekeeper-sdk:$beekeeper_sdk_version"
+    implementation "io.beekeeper:chatbot-sdk:$beekeeper_sdk_version"
+
+    // JUnit
+    testCompile 'junit:junit:4.12'
+}
