@@ -1,11 +1,17 @@
 package io.beekeeper.bots.pizza;
 
+import java.util.Collection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import io.beekeeper.sdk.ChatBot;
 import io.beekeeper.sdk.exception.BeekeeperException;
 import io.beekeeper.sdk.model.Conversation;
 import io.beekeeper.sdk.model.ConversationMessage;
 
 public class PizzaBot extends ChatBot {
+
+    private final Pattern ITEM_ORDER_PATTERN = Pattern.compile("^/order\\s(.*)");
 
     private OrderSession orderSession = null;
 
@@ -46,7 +52,12 @@ public class PizzaBot extends ChatBot {
             return;
         }
 
-        // Case 2: An item is added to the existing order
+        // Case 2: An item is added to the existing
+        Matcher matcher = ITEM_ORDER_PATTERN.matcher(message.getText());
+        if (matcher.matches()) {
+            processItemAdding(conversation, message, matcher.group(1), conversationHelper);
+            return;
+        }
 
         // Case 3: Order is closed / sent
         if (message.getText().equals("/cancel")) {
@@ -54,9 +65,40 @@ public class PizzaBot extends ChatBot {
             return;
         }
 
-
         // Case 5: Help commands / get list of available items
+        if (message.getText().equals("/orders")) {
+            showOrders(conversation, conversationHelper);
+            return;
+        }
+    }
 
+    private void showOrders(Conversation conversation, ConversationHelper conversationHelper) throws BeekeeperException {
+        if (orderSession == null || orderSession.getConversation().getId() != conversation.getId()) {
+            conversationHelper.reply("There is no ongoing order.");
+            return;
+        }
+
+
+        Collection<OrderItem> orderItems = orderSession.getOrderItems();
+        if (orderItems.isEmpty()) {
+            conversationHelper.reply("Nothing was added to this order yet.");
+            return;
+        }
+        StringBuilder builder = new StringBuilder("Current orders:\n");
+        for (OrderItem orderItem : orderItems) {
+            builder.append("\n- " + orderItem.getItemName());
+        }
+        conversationHelper.reply(builder.toString());
+    }
+
+    private void processItemAdding(Conversation conversation, ConversationMessage message, String itemName, ConversationHelper conversationHelper) throws BeekeeperException {
+        if (orderSession == null || orderSession.getConversation().getId() != conversation.getId()) {
+            conversationHelper.reply("There is no ongoing order.");
+            return;
+        }
+
+        orderSession.updateOrderItem(message.getUserId(), new OrderItem(itemName));
+        getSdk().getConversations().sendMessageToUser(message.getUsername(), "Your order for \"" + conversation.getName() + "\": " + itemName).execute();
     }
 
 
