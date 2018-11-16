@@ -223,6 +223,9 @@ public class PizzaBot extends ChatBot {
         String orderSummary = stringBuilder.toString();
 
         String text = hadOrderItem ? "Updated order to \"" + orderSummary + "\" for " + message.getDisplayName() : "Added \"" + orderSummary + "\" to the order for " + message.getDisplayName();
+
+        if (orderSummary.toLowerCase().contains("hawaii")) text = text + ", who is a weirdo that likes pineapples on their pizza";
+
         sendConfirmationMessage(conversation, message, text);
     }
 
