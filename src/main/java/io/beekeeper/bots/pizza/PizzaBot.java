@@ -70,6 +70,20 @@ public class PizzaBot extends ChatBot {
             showOrders(conversation, conversationHelper);
             return;
         }
+
+        if (message.getText().equals("/help")) {
+            showHelp(conversationHelper);
+        }
+    }
+
+    private void showHelp(ConversationHelper conversationHelper) throws BeekeeperException {
+        String helpText =
+                "/help                show this help\n" +
+                "/start               start a new pizza order\n" +
+                "/start               cancel the current pizza order\n" +
+                "/orders              show the currently registerd orders\n" +
+                "/order [pizza]       show this help\n";
+        conversationHelper.reply(helpText);
     }
 
     private void showOrders(Conversation conversation, ConversationHelper conversationHelper) throws BeekeeperException {
