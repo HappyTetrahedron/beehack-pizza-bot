@@ -70,6 +70,11 @@ public class PizzaBot extends ChatBot {
             return;
         }
 
+        if (message.getText().equals("/remove")) {
+            processRemovingItem(conversation, message, conversationHelper);
+            return;
+        }
+
         // Case 3: Order is closed / sent
         if (message.getText().equals("/cancel")) {
             cancelOrder(conversation, conversationHelper);
@@ -87,13 +92,26 @@ public class PizzaBot extends ChatBot {
         }
     }
 
+    private void processRemovingItem(Conversation conversation, ConversationMessage message, ConversationHelper conversationHelper) throws BeekeeperException {
+        if (orderSession == null || orderSession.getConversation().getId() != conversation.getId()) {
+            conversationHelper.reply("There is no ongoing order.");
+            return;
+        }
+
+        orderSession.updateOrderItem(message.getUserId(), null);
+        String text = "Removed order for " + message.getDisplayName() + ".";
+        sendConfirmationMessage(conversation, message, text);
+
+    }
+
     private void showHelp(ConversationHelper conversationHelper) throws BeekeeperException {
         String helpText =
                 "/help show this help\n" +
                         "/start start a new pizza order\n" +
                         "/cancel cancel the current pizza order\n" +
                         "/orders show the currently registered orders\n" +
-                        "/order [pizza] add a pizza with given name to the order\n";
+                        "/order [pizza] add a pizza with given name to the order\n" +
+                        "/remove remove your order";
         conversationHelper.reply(helpText);
     }
 
@@ -150,9 +168,12 @@ public class PizzaBot extends ChatBot {
             return;
         }
 
+        boolean hadOrderItem = orderSession.hasOrderItem(message.getUserId());
+
         orderSession.updateOrderItem(message.getUserId(), new OrderItem(message.getDisplayName(), itemName, menuItem));
 
-        sendConfirmationMessage(conversation, message, menuItem.getArticleName());
+        String text = hadOrderItem ? "Updated order to \"" + menuItem.getArticleName() + "\" for " + message.getDisplayName() : "Added \"" + menuItem.getArticleName() + "\" to the order for " + message.getDisplayName();
+        sendConfirmationMessage(conversation, message, text);
     }
 
     private void startOrder(Conversation conversation, ConversationHelper conversationHelper) throws BeekeeperException {
@@ -179,8 +200,8 @@ public class PizzaBot extends ChatBot {
         // Case 4: Correction / cancellation (1-on-1)
     }
 
-    protected void sendConfirmationMessage(Conversation conversation, ConversationMessage message, String itemName) throws BeekeeperException {
-        getSdk().getConversations().sendEventMessage(conversation.getId(), "Added \"" + itemName + "\" to the order for " + message.getDisplayName()).execute();
+    protected void sendConfirmationMessage(Conversation conversation, ConversationMessage message, String text) throws BeekeeperException {
+        getSdk().getConversations().sendEventMessage(conversation.getId(), text).execute();
     }
 
     private void sendItemNotFoundMessageToUser(ConversationMessage message, String itemName) throws BeekeeperException {

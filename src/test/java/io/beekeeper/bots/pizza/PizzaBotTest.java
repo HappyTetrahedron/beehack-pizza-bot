@@ -47,7 +47,7 @@ public class PizzaBotTest {
             super(tenantUrl, apiToken);
         }
         @Override
-        protected void sendConfirmationMessage(Conversation conversation, ConversationMessage message, String itemName) throws BeekeeperException {
+        protected void sendConfirmationMessage(Conversation conversation, ConversationMessage message, String text) throws BeekeeperException {
             return;
         }
     }

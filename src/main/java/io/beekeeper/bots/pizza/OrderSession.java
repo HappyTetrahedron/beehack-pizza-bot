@@ -2,7 +2,6 @@ package io.beekeeper.bots.pizza;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 
 import io.beekeeper.sdk.model.Conversation;
 
@@ -18,6 +17,10 @@ public class OrderSession {
 
     public Conversation getConversation() {
         return conversation;
+    }
+
+    public boolean hasOrderItem(String userId) {
+        return orderItems.containsKey(userId);
     }
 
     public void updateOrderItem(String userId, OrderItem orderItem) {
