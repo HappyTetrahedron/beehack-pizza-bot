@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'war'
     id 'application'
+    id 'com.github.johnrengelman.shadow' version '2.0.2'
 }
 
 group 'beekeeper'

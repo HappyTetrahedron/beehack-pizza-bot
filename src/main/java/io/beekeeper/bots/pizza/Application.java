@@ -8,7 +8,6 @@ import java.util.Map;
 public class Application {
     private final static String ENV_KEY_BKPR_URL = "BEEKEEPER_API_URL";
     private final static String ENV_KEY_BKPR_KEY = "BEEKEEPER_ACCESS_KEY";
-    private final static String ENV_KEY_GIPHY_KEY = "GIPHY_API_KEY";
 
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
