@@ -1,13 +1,12 @@
 package io.beekeeper.bots.pizza;
 
-import java.util.HashMap;
-import io.beekeeper.bots.pizza.crawler.DieciMenuItem;
-import io.beekeeper.bots.pizza.crawler.DieciService;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import io.beekeeper.bots.pizza.crawler.DieciMenuItem;
+import io.beekeeper.bots.pizza.crawler.DieciService;
 
 public class Application {
     private final static String BASE_URL = "https://pizza.dev.beekeeper.io";
@@ -20,6 +19,7 @@ public class Application {
         Parser<DieciMenuItem> dieciMenuItemParser = initDieciMenuParser();
         bot.setParser(dieciMenuItemParser);
 
+        System.out.println("Starting bot");
         bot.start();
     }
 
