@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.beekeeper.bots.pizza.crawler.DieciMenuItem;
 import io.beekeeper.sdk.ChatBot;
 import io.beekeeper.sdk.exception.BeekeeperException;
 import io.beekeeper.sdk.model.Conversation;
@@ -14,13 +15,13 @@ public class PizzaBot extends ChatBot {
     private final Pattern ITEM_ORDER_PATTERN = Pattern.compile("^/order\\s(.*)");
 
     private OrderSession orderSession = null;
-    private Parser parser = null;
+    private Parser<DieciMenuItem> parser = null;
 
     public PizzaBot(String tenantUrl, String apiToken) {
         super(tenantUrl, apiToken);
     }
 
-    public void setParser(Parser parser) {
+    public void setParser(Parser<DieciMenuItem> parser) {
         this.parser = parser;
     }
 
