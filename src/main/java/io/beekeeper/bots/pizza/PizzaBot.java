@@ -92,7 +92,7 @@ public class PizzaBot extends ChatBot {
                 "/help show this help\n" +
                         "/start start a new pizza order\n" +
                         "/cancel cancel the current pizza order\n" +
-                        "/orders show the currently registerd orders\n" +
+                        "/orders show the currently registered orders\n" +
                         "/order [pizza] add a pizza with given name to the order\n";
         conversationHelper.reply(helpText);
     }
