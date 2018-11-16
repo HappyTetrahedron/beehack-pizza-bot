@@ -1,8 +1,5 @@
 package io.beekeeper.bots.pizza;
 
-import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
-import lombok.AllArgsConstructor;
-
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,16 +32,16 @@ public class Parser<T> {
         String[] orderParts = normalizeAndSplit(message);
         for (String itemName : availableItems.keySet()) {
             String[] nameParts = normalizeAndSplit(itemName);
-            for (int o = 0; o < orderParts.length; o++) {
-                for (int n = 0; n < nameParts.length; n++) {
+            for (int orderWordIdx = 0; orderWordIdx < orderParts.length; orderWordIdx++) {
+                for (int itemNameWordIdx = 0; itemNameWordIdx < nameParts.length; itemNameWordIdx++) {
 
-                    String prefix = commonPrefix(orderParts[o], nameParts[n]);
-                    if (prefix.length() >= Math.min(min_chars_first_word, nameParts[n].length())) {
+                    String prefix = commonPrefix(orderParts[orderWordIdx], nameParts[itemNameWordIdx]);
+                    if (prefix.length() >= Math.min(min_chars_first_word, nameParts[itemNameWordIdx].length())) {
                         // Forward scanning mode engage!
                         List<String> matches = new ArrayList<>();
-                        for (int nn = n; nn < nameParts.length; nn++) {
-                            if (o - n + nn < orderParts.length) {
-                                String nextPrefix = commonPrefix(nameParts[nn], orderParts[o - n + nn]);
+                        for (int nn = itemNameWordIdx; nn < nameParts.length; nn++) {
+                            if (orderWordIdx - itemNameWordIdx + nn < orderParts.length) {
+                                String nextPrefix = commonPrefix(nameParts[nn], orderParts[orderWordIdx - itemNameWordIdx + nn]);
                                 if (nextPrefix.length() >= Math.min(min_chars_subsequent_words, nameParts[nn].length())) {
                                     matches.add(nextPrefix);
                                 }
@@ -54,7 +51,7 @@ public class Parser<T> {
                             if (countCharsInStringList(matches) >= Math.min(min_chars_total, countCharsInStringList(nameParts))) {
                                 matchesFound.add(new MatchData(matches.size(),
                                         countCharsInStringList(matches),
-                                        n,
+                                        itemNameWordIdx,
                                         itemName));
                             }
                         }
