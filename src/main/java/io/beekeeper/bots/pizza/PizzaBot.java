@@ -137,7 +137,7 @@ public class PizzaBot extends ChatBot {
 
         orderSession.updateOrderItem(message.getUserId(), new OrderItem(message.getDisplayName(), itemName, menuItem));
 
-        sendPrivateConfirmationMessageToUser(conversation, message, itemName);
+        sendPrivateConfirmationMessageToUser(conversation, message, menuItem.getArticleName());
     }
 
     private void startOrder(Conversation conversation, ConversationHelper conversationHelper) throws BeekeeperException {
@@ -147,7 +147,7 @@ public class PizzaBot extends ChatBot {
         }
 
         orderSession = new OrderSession(conversation);
-        conversationHelper.reply("Order started");
+        conversationHelper.reply("Order started. Add items to the order by sending a message starting with /order, e.g., /order Quattro formaggi");
     }
 
     private void cancelOrder(Conversation conversation, ConversationHelper conversationHelper) throws BeekeeperException {
