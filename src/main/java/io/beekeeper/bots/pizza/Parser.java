@@ -110,7 +110,17 @@ public class Parser<T> {
         public int compareTo(MatchData that) {
             int lens = Integer.compare(that.len, this.len);
             if (lens != 0) return lens;
-            return Integer.compare(that.sum, this.sum);
+            int sums = Integer.compare(that.sum, this.sum);
+            if (sums != 0) return sums;
+            int idx = Integer.compare(this.index, that.index);
+            if (idx != 0) return idx;
+            int thisWordCount = this.productName.trim().split(" ").length;
+            int thatWordCount = that.productName.trim().split(" ").length;
+            int wordCounts = Integer.compare(thisWordCount, thatWordCount);
+            if (wordCounts != 0) return wordCounts;
+            if (this.productName.contains("normal") && !that.productName.contains("normal")) return -1;
+            else if (that.productName.contains("normal") && !this.productName.contains("normal")) return 1;
+            else return 0;
         }
     }
 }

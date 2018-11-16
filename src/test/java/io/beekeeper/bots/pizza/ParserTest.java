@@ -21,18 +21,6 @@ public class ParserTest {
     }
 
     @Test
-    public void testDoesNotMatchIfOnlyOneWord() {
-        Map<String, String> menu = new HashMap<>();
-        menu.put("Gorgonzola Thing", "Gorgonzola Whee");
-        menu.put("Margherita", "Margherita");
-        Parser<String> p = new Parser<>(menu);
-
-        String result = p.parse("gorgonzola");
-
-        Assert.assertEquals(null, result);
-    }
-
-    @Test
     public void testMatchesWordsNotAtStart() {
         Map<String, String> menu = new HashMap<>();
         menu.put("Gorgonzola Thing Pizza", "Gorgonzola Whee");
@@ -79,5 +67,29 @@ public class ParserTest {
         String result = p.parse("gorgonzola pizza margherita");
 
         Assert.assertEquals("correct", result);
+    }
+
+    @Test
+    public void testFindsWithUmlaut() {
+        Map<String, String> menu = new HashMap<>();
+        menu.put("öGorgonzöla Pizza", "Gorgonzola Whee");
+        menu.put("Margherita", "Margherita");
+        Parser<String> p = new Parser<>(menu);
+
+        String result = p.parse("ogorgonzola pizza");
+
+        Assert.assertEquals("Gorgonzola Whee", result);
+    }
+
+    @Test
+    public void testFindsWithUmlaut2() {
+        Map<String, String> menu = new HashMap<>();
+        menu.put("oGorgonzöla Pizza", "Gorgonzola Whee");
+        menu.put("Margherita", "Margherita");
+        Parser<String> p = new Parser<>(menu);
+
+        String result = p.parse("ögörgönzölä pizzä");
+
+        Assert.assertEquals("Gorgonzola Whee", result);
     }
 }
