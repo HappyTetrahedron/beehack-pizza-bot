@@ -2,6 +2,7 @@ package io.beekeeper.bots.pizza;
 
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,20 +66,12 @@ public class Parser<T> {
     }
 
     private int countCharsInStringList(List<String> aList) {
-        int sum = 0;
-        for (String s : aList) {
-            sum += s.length();
-        }
-        return sum;
+        return aList.stream().mapToInt(String::length).sum();
     }
 
     private int countCharsInStringList(String[] aList) {
         // Even though the code is equal Java won't let me write only one method.
-        int sum = 0;
-        for (String s : aList) {
-            sum += s.length();
-        }
-        return sum;
+        return Arrays.stream(aList).mapToInt(String::length).sum();
     }
 
     private String commonPrefix(String a, String b) {
@@ -106,7 +99,7 @@ public class Parser<T> {
         int index;
         String productName;
 
-        public MatchData(int len, int sum, int index, String productName) {
+        MatchData(int len, int sum, int index, String productName) {
             this.len = len;
             this.sum = sum;
             this.index = index;
