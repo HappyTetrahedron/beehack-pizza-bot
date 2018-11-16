@@ -120,7 +120,9 @@ public class Parser<T> {
             if (wordCounts != 0) return wordCounts;
             if (this.productName.contains("normal") && !that.productName.contains("normal")) return -1;
             else if (that.productName.contains("normal") && !this.productName.contains("normal")) return 1;
-            else return 0;
+            if (this.productName.contains("regular") && !that.productName.contains("regular")) return -1;
+            else if (that.productName.contains("regular") && !this.productName.contains("regular")) return 1;
+            return 0;
         }
     }
 }

@@ -37,7 +37,13 @@ async function orderPizza(page, { articleId, count }) {
     await page.waitForSelector('.article-container')
     await page.screenshot({path: 'a.png'});
 
-    return orders.reduce((promiseChain, order) => {
+    await orders.reduce((promiseChain, order) => {
         return promiseChain.then(() => orderPizza(page, order));
     }, Promise.resolve());
+    await page.waitForSelector(".Reached_minOrderPrice", { visible: true, timeout: 5000 });
+    await page.click(".Reached_minOrderPrice");
+    await page.waitForSelector(".goto-shopping-cart .btn", { visible: true, timeout: 5000 });
+    await page.click(".goto-shopping-cart .btn");
+    await page.waitForSelector('[name="order_comment"]', { visible: true, timeout: 5000 });
+    await page.screenshot({path: 'b.png'});
 })();
