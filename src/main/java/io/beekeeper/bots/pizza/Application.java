@@ -9,8 +9,8 @@ import io.beekeeper.bots.pizza.crawler.DieciMenuItem;
 import io.beekeeper.bots.pizza.crawler.DieciService;
 
 public class Application {
-    private final static String BASE_URL = "https://pizza.dev.beekeeper.io";
-    private final static String API_TOKEN = "2c39a8b4-4af7-44df-abe0-236d9de0ab27";
+    private final static String BASE_URL = "https://team.beekeeper.io";
+    private final static String API_TOKEN = "975f909c-7344-4123-89d8-d81b63dc641b";
 
     public static void main(String[] args) throws IOException {
         PizzaBot bot = new PizzaBot(BASE_URL, API_TOKEN);

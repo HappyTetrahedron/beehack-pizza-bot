@@ -9,6 +9,7 @@ import io.beekeeper.sdk.ChatBot;
 import io.beekeeper.sdk.exception.BeekeeperException;
 import io.beekeeper.sdk.model.Conversation;
 import io.beekeeper.sdk.model.ConversationMessage;
+import io.beekeeper.sdk.params.SendMessageParams;
 
 
 public class PizzaBot extends ChatBot {
@@ -108,6 +109,26 @@ public class PizzaBot extends ChatBot {
             conversationHelper.reply("Nothing was added to this order yet.");
             return;
         }
+
+        OrderHelper.executeOrder(orderSession.getOrderItems(), new OrderHelper.Callback() {
+            @Override
+            public void onSuccess() {
+                try {
+                    conversationHelper.reply("It's all good man");
+                } catch (BeekeeperException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure() {
+                try {
+                    conversationHelper.reply("Something went wrong");
+                } catch (BeekeeperException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
         orderSession = null;
 

@@ -83,8 +83,13 @@ public class DieciService {
                 DieciMenuItem dieciMenuItem = new Gson().fromJson(rootItem.toString(), DieciMenuItem.class);
                 items.add(dieciMenuItem);
             } else {
+                String parentArticleNumber = rootItem.getAsJsonPrimitive("article_articlenumber").getAsString();
+                String parentCommodityGroupId = rootItem.getAsJsonPrimitive("commoditygroup_id").getAsString();
+
                 for (Map.Entry<String, JsonElement> groupArticleEntry : articleGroups.entrySet()) {
                     DieciMenuItem dieciMenuItem = new Gson().fromJson(groupArticleEntry.getValue().toString(), DieciMenuItem.class);
+                    dieciMenuItem.setParentArticleNumber(parentArticleNumber);
+                    dieciMenuItem.setCommodityGroupId(parentCommodityGroupId);
                     items.add(dieciMenuItem);
                 }
             }

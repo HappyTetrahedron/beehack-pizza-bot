@@ -22,6 +22,22 @@ public class DieciMenuItem {
     private String articleGroupAbbreviation;
     @SerializedName("articlepricing_price")
     private String articlePrice;
+    @SerializedName("commoditygroup_id")
+    private String commodityGroupId;
+
+    private String parentArticleNumber;
+
+    public void setParentArticleNumber(String parentArticleNumber) {
+        this.parentArticleNumber = parentArticleNumber;
+    }
+
+    public void setCommodityGroupId(String commodityGroupId) {
+        this.commodityGroupId = commodityGroupId;
+    }
+
+    public String getParentArticleNumber() {
+        return parentArticleNumber;
+    }
 
     public float getPrice() {
         try {
@@ -29,6 +45,10 @@ public class DieciMenuItem {
         } catch (NumberFormatException e) {
             return 0;
         }
+    }
+
+    public String getCommodityGroupId() {
+        return commodityGroupId;
     }
 
     public String getArticlePrice() {
