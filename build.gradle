@@ -1,9 +1,20 @@
+buildscript {
+    ext.kotlin_version = '1.3.10'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
 plugins {
     id 'java'
     id 'war'
     id 'application'
     id 'com.github.johnrengelman.shadow' version '2.0.2'
 }
+apply plugin: 'kotlin'
 
 group 'beekeeper'
 version '1.0'
@@ -13,7 +24,7 @@ sourceCompatibility = 1.8
 applicationDefaultJvmArgs = ["-Xms64M", "-Xmx128M"]
 
 ext {
-    beekeeper_sdk_version = "2.1.3"
+    beekeeper_sdk_version = '2.1.3'
 }
 
 repositories {
@@ -24,15 +35,22 @@ repositories {
 
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.3.11'
-
-    // Failsafe
-    implementation 'net.jodah:failsafe:1.0.5'
-
     // Beekeeper SDKs
     implementation "io.beekeeper:beekeeper-sdk:$beekeeper_sdk_version"
     implementation "io.beekeeper:chatbot-sdk:$beekeeper_sdk_version"
 
     // JUnit
-    testCompile 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.12'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+}
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }

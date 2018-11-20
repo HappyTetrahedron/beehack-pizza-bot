@@ -9,7 +9,6 @@ import io.beekeeper.sdk.ChatBot;
 import io.beekeeper.sdk.exception.BeekeeperException;
 import io.beekeeper.sdk.model.Conversation;
 import io.beekeeper.sdk.model.ConversationMessage;
-import io.beekeeper.sdk.params.SendMessageParams;
 
 
 public class PizzaBot extends ChatBot {
@@ -231,7 +230,7 @@ public class PizzaBot extends ChatBot {
                 continue;
             }
 
-            orderSession.addOrderItem(message.getUserId(), new OrderItem(message.getDisplayName(), rawItem, menuItem));
+            orderSession.addOrderItem(message.getUserId(), new OrderItem(message.getDisplayName(), menuItem));
 
             if (first) {
                 first = false;
