@@ -26,6 +26,7 @@ module.exports = {
         console.log(`Going to ${DIECI_HOME_PAGE} (zip code: ${postCode})`);
         await page.goto(DIECI_HOME_PAGE);
         await page.type('#plzEntry', postCode);
+        await page.waitFor(1000);
         await page.click('#orderPizza');
         await page.waitForSelector('.article-container');
     },
