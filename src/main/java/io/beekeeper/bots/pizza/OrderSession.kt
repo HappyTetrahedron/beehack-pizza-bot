@@ -4,6 +4,9 @@ class OrderSession(val conversationId: Int) {
 
     private val orderItems = mutableMapOf<String, MutableList<OrderItem>>()
 
+    var isConfirmationOngoing = false
+    var confirmingUser = ""
+
     fun hasOrderItem(userId: String): Boolean {
         return orderItems.containsKey(userId)
     }
