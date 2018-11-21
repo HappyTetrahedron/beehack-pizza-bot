@@ -14,11 +14,8 @@ public class PizzaBot extends ChatBot {
 
     private final Pattern ITEM_ORDER_PATTERN = Pattern.compile("^/order\\s(.*)");
 
-    public OrderSession getOrderSession() {
-        return orderSession;
-    }
-
     private OrderSession orderSession = null;
+
     private Parser<DieciMenuItem> parser = null;
 
     public PizzaBot(String tenantUrl, String apiToken) {
@@ -54,52 +51,61 @@ public class PizzaBot extends ChatBot {
     }
 
     void processGroupMessage(int conversationId, ConversationMessage message, ConversationHelper conversationHelper) throws BeekeeperException {
-        // Case 1: Order is started
+        if (message.getText().equals("/help")) {
+            showHelp(conversationHelper);
+        }
+
         if (message.getText().equals("/start")) {
             startOrder(conversationId, conversationHelper);
             return;
         }
 
-        // Case 2: An item is added to the existing
         Matcher matcher = ITEM_ORDER_PATTERN.matcher(message.getText());
         if (matcher.matches()) {
-            processItemAdding(conversationId, message, matcher.group(1), conversationHelper);
+            if (checkValidSession(conversationId, conversationHelper)) {
+                processItemAdding(conversationId, message, matcher.group(1), conversationHelper);
+            }
             return;
         }
 
         if (message.getText().equals("/remove")) {
-            processRemovingItem(conversationId, message, conversationHelper);
+            if (checkValidSession(conversationId, conversationHelper)) {
+                processRemovingItem(conversationId, message, conversationHelper);
+            }
             return;
         }
 
-        // Case 3: Order is closed / sent
         if (message.getText().equals("/cancel")) {
-            cancelOrder(conversationId, conversationHelper);
+            if (checkValidSession(conversationId, conversationHelper)) {
+                cancelOrder(conversationId, conversationHelper);
+            }
             return;
         }
 
         if (message.getText().equals("/submit")) {
-            submitOrder(conversationId, conversationHelper);
+            if (checkValidSession(conversationId, conversationHelper)) {
+                submitOrder(conversationId, conversationHelper);
+            }
             return;
         }
 
-        // Case 5: Help commands / get list of available items
         if (message.getText().equals("/orders")) {
-            showOrders(conversationId, conversationHelper);
+            if (checkValidSession(conversationId, conversationHelper)) {
+                showOrders(conversationId, conversationHelper);
+            }
             return;
-        }
-
-        if (message.getText().equals("/help")) {
-            showHelp(conversationHelper);
         }
     }
 
-    private void submitOrder(int conversationId, ConversationHelper conversationHelper) throws BeekeeperException {
+    private boolean checkValidSession(int conversationId, ConversationHelper conversationHelper) throws BeekeeperException {
         if (orderSession == null || orderSession.getConversationId() != conversationId) {
             conversationHelper.reply("There is no ongoing order.");
-            return;
+            return false;
         }
+        return true;
+    }
 
+    private void submitOrder(int conversationId, ConversationHelper conversationHelper) throws BeekeeperException {
         Collection<OrderItem> orderItems = orderSession.getOrderItems();
         if (orderItems.isEmpty()) {
             conversationHelper.reply("Nothing was added to this order yet.");
@@ -128,25 +134,18 @@ public class PizzaBot extends ChatBot {
 
         orderSession = null;
 
-        StringBuilder builder = new StringBuilder()
-                .append("Order submitted. Your food will arrive in approximately 40 minutes.")
-                .append("\n\n\n")
-                .append("Order Summary:")
-                .append("\n")
-                .append(getSummary(orderItems));
-        conversationHelper.reply(builder.toString());
+        String builder = "Order submitted. Your food will arrive in approximately 40 minutes." +
+                "\n\n\n" +
+                "Order Summary:" +
+                "\n" +
+                getSummary(orderItems);
+        conversationHelper.reply(builder);
     }
 
     private void processRemovingItem(int conversationId, ConversationMessage message, ConversationHelper conversationHelper) throws BeekeeperException {
-        if (orderSession == null || orderSession.getConversationId() != conversationId) {
-            conversationHelper.reply("There is no ongoing order.");
-            return;
-        }
-
         orderSession.removeOrderItems(message.getUserId());
         String text = "Removed order for " + message.getDisplayName() + ".";
         sendConfirmationMessage(conversationId, text);
-
     }
 
     private void showHelp(ConversationHelper conversationHelper) throws BeekeeperException {
@@ -162,11 +161,6 @@ public class PizzaBot extends ChatBot {
     }
 
     private void showOrders(int conversationId, ConversationHelper conversationHelper) throws BeekeeperException {
-        if (orderSession == null || orderSession.getConversationId() != conversationId) {
-            conversationHelper.reply("There is no ongoing order.");
-            return;
-        }
-
         Collection<OrderItem> orderItems = orderSession.getOrderItems();
         if (orderItems.isEmpty()) {
             conversationHelper.reply("Nothing was added to this order yet.");
@@ -203,11 +197,6 @@ public class PizzaBot extends ChatBot {
     }
 
     private void processItemAdding(int conversationId, ConversationMessage message, String originalText, ConversationHelper conversationHelper) throws BeekeeperException {
-        if (orderSession == null || (groupConversationManager.isGroupConversation(conversationId) && orderSession.getConversationId() != conversationId)) {
-            conversationHelper.reply("There is no ongoing order.");
-            return;
-        }
-
         if (parser == null) {
             return;
         }
@@ -252,7 +241,7 @@ public class PizzaBot extends ChatBot {
 
     private void startOrder(int conversationId, ConversationHelper conversationHelper) throws BeekeeperException {
         if (orderSession != null) {
-            conversationHelper.reply("There is already an ongoing order.");
+            conversationHelper.reply("There is already an ongoing order in another chat. Concurrent orders are not yet supported.");
             return;
         }
 
@@ -261,11 +250,6 @@ public class PizzaBot extends ChatBot {
     }
 
     private void cancelOrder(int conversationId, ConversationHelper conversationHelper) throws BeekeeperException {
-        if (orderSession == null || orderSession.getConversationId() != conversationId) {
-            conversationHelper.reply("There was no ongoing order.");
-            return;
-        }
-
         orderSession = null;
         conversationHelper.reply("Order cancelled.");
     }
