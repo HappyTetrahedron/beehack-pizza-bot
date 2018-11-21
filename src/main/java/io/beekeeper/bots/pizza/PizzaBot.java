@@ -93,7 +93,14 @@ public class PizzaBot extends ChatBot {
 
         if (message.getText().equals("/confirm")) {
             if (checkValidSession(conversationId, conversationHelper)) {
-                confirmOrder(message.getUserId(), conversationHelper);
+                confirmOrder(message.getUserId(), conversationHelper, false);
+            }
+            return;
+        }
+
+        if (message.getText().equals("/dryrun")) {
+            if (checkValidSession(conversationId, conversationHelper)) {
+                confirmOrder(message.getUserId(), conversationHelper, true);
             }
             return;
         }
@@ -133,7 +140,7 @@ public class PizzaBot extends ChatBot {
         conversationHelper.reply(builder);
     }
 
-    private void confirmOrder(String userId, ConversationHelper conversationHelper) throws BeekeeperException {
+    private void confirmOrder(String userId, ConversationHelper conversationHelper, boolean dryrun) throws BeekeeperException {
         if (!orderSession.isConfirmationOngoing()) {
             conversationHelper.reply("You first have to /submit your order so you can confirm it.");
             return;
@@ -143,8 +150,7 @@ public class PizzaBot extends ChatBot {
 
             Collection<OrderItem> orderItems = orderSession.getOrderItems();
 
-            final boolean dryRun = true;
-            OrderHelper.executeOrder(orderSession.getOrderItems(), dryRun, new OrderHelper.Callback() {
+            OrderHelper.executeOrder(orderSession.getOrderItems(), dryrun, new OrderHelper.Callback() {
                 @Override
                 public void onSuccess() {
                     try {
