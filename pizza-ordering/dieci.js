@@ -61,6 +61,7 @@ module.exports = {
         await page.type('#communication_phonenumber', personalData.phone);
 
         await page.click('label[for="radio_isCompany_1"]')
+        await page.click('label[for="radio_gender_m"]')
 
         await page.type('input[name="customerdata[customer_companyname]"]', personalData.company);
         await page.type('input[name="customerdata[customer_department]"]', personalData.department);
@@ -85,6 +86,8 @@ module.exports = {
     },
 
     async executeOrder66(page) {
+        await page.click('button[data-rel="checkout_send"]');
+
         await page.screenshot({ path: 'final.png', fullPage: true });
     },
 
