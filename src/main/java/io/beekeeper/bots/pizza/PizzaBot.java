@@ -170,7 +170,9 @@ public class PizzaBot extends ChatBot {
                 }
             });
 
-            orderSession = null;
+            if (!dryrun) {
+                orderSession = null;
+            }
 
             String builder = "Order submitted. Your food will arrive in approximately 40 minutes." +
                     "\n\n" +
