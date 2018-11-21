@@ -17,8 +17,15 @@ public class OrderHelper {
         void onFailure();
     }
 
-    public static void executeOrder(Collection<OrderItem> orderItems, Callback callback) {
-        List<String> command = Arrays.asList("node", "pizza-ordering/app.js", toJSON(orderItems).toString());
+    public static void executeOrder(Collection<OrderItem> orderItems, boolean dryRun, Callback callback) {
+        List<String> command = new ArrayList<>(Arrays.asList(
+            "node",
+            "pizza-ordering/app.js",
+            toJSON(orderItems).toString()
+        ));
+        if (!dryRun) {
+            command.add("-x");
+        }
 
         new Thread(() -> {
             try {

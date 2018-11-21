@@ -143,7 +143,8 @@ public class PizzaBot extends ChatBot {
 
             Collection<OrderItem> orderItems = orderSession.getOrderItems();
 
-            OrderHelper.executeOrder(orderSession.getOrderItems(), new OrderHelper.Callback() {
+            final boolean dryRun = true;
+            OrderHelper.executeOrder(orderSession.getOrderItems(), dryRun, new OrderHelper.Callback() {
                 @Override
                 public void onSuccess() {
                     try {
