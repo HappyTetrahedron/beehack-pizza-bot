@@ -80,8 +80,12 @@ module.exports = {
         await page.click('label[for="cb_payment_1"]')
         await page.click('#cb_agb_warning')
 
-        await page.screenshot({ path: 'final.png', fullPage: true });
+        await page.screenshot({ path: 'form.png', fullPage: true });
 
-    }
+    },
+
+    async executeOrder66(page) {
+        await page.screenshot({ path: 'final.png', fullPage: true });
+    },
 
 }

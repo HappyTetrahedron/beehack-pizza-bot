@@ -20,10 +20,8 @@ async function initializePuppeteer() {
     return { browser, page };
 }
 
-async function main(ordersJson) {
+async function main(orders, doExecute) {
     try {
-        const orders = JSON.parse(ordersJson);
-
         browser = await puppeteer.launch({ headless: true });
         const page = await browser.newPage();
         await page.setViewport({ width: 2000, height: 1500});
@@ -36,6 +34,9 @@ async function main(ordersJson) {
 
         await Dieci.goToShoppingCart(page);
         await Dieci.fillPersonalDataForm(page, PERSONAL_DATA);
+        if (doExecute === '-x') {
+            await Dieci.executeOrder66(page);
+        }
 
         await browser.close();
     } catch (err) {
@@ -50,4 +51,10 @@ async function main(ordersJson) {
 
 // console.log(JSON.stringify(orders));
 
-main(process.argv[2]);
+try {
+    const orders = JSON.parse(process.argv[2]);
+    main(orders, process.argv[3]);
+} catch (error) {
+    console.error(err);
+    process.exit(1)
+}
