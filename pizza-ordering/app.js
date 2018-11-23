@@ -4,8 +4,8 @@ const Dieci = require('./dieci');
 const PERSONAL_DATA = {
     firstName: 'Jimmy',
     lastName: 'Pizzaiolo',
-    email: 'jimmy.pizzaiolo@beekeeper.io',
-    phone: '+41 78 123 45 67',
+    email: 'roland.meyer+jimmy@beekeeper.io',
+    phone: '+41 78 634 46 40',
     company: 'Beekeeper',
     street: 'Hönggerstrasse',
     postalCode: '8037',
@@ -15,7 +15,6 @@ const PERSONAL_DATA = {
 };
 
 async function initializePuppeteer() {
-
 
     return { browser, page };
 }

@@ -82,13 +82,15 @@ module.exports = {
         await page.click('#cb_agb_warning')
 
         await page.screenshot({ path: 'form.png', fullPage: true });
-
     },
 
     async executeOrder66(page) {
+        console.log("Submitting order");
         await page.click('button[data-rel="checkout_send"]');
-
+        await page.waitFor(4000);
+        console.log("Taking screenshot final.png");
         await page.screenshot({ path: 'final.png', fullPage: true });
+        await page.waitFor(4000);
     },
 
 }

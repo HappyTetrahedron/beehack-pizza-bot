@@ -35,9 +35,15 @@ repositories {
 
 
 dependencies {
+    // Logging
+    implementation 'org.slf4j:slf4j-simple:1.7.5'
+
     // Beekeeper SDKs
     implementation "io.beekeeper:beekeeper-sdk:$beekeeper_sdk_version"
     implementation "io.beekeeper:chatbot-sdk:$beekeeper_sdk_version"
+
+    // Promises
+    implementation 'org.jdeferred.v2:jdeferred-core:2.0.0-beta2'
 
     // JUnit
     testImplementation 'junit:junit:4.12'

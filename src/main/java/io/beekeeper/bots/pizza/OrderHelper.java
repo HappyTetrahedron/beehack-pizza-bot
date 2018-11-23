@@ -6,6 +6,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.jdeferred2.Promise;
+import org.jdeferred2.impl.DeferredObject;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -13,17 +16,13 @@ import io.beekeeper.bots.pizza.shell.ProcessExecutor;
 
 public class OrderHelper {
 
-    public interface Callback {
-        void onSuccess();
+    public static Promise<Void, Void, Void> executeOrder(Collection<OrderItem> orderItems, boolean dryRun) {
+        DeferredObject<Void, Void, Void> deferred = new DeferredObject<>();
 
-        void onFailure();
-    }
-
-    public static void executeOrder(Collection<OrderItem> orderItems, boolean dryRun, Callback callback) {
         List<String> command = new ArrayList<>(Arrays.asList(
-            "node",
-            "pizza-ordering/app.js",
-            toJSON(orderItems).toString()
+                "node",
+                "pizza-ordering/app.js",
+                toJSON(orderItems).toString()
         ));
         if (!dryRun) {
             command.add("-x");
@@ -34,14 +33,16 @@ public class OrderHelper {
                 System.out.println("command = " + command);
                 ProcessExecutor.CommandResult result = ProcessExecutor.executeCommand(command);
                 if (result.getExitCode() == 0) {
-                    callback.onSuccess();
+                    deferred.resolve(null);
                 } else {
-                    callback.onFailure();
+                    deferred.reject(null);
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
         }).start();
+
+        return deferred.promise();
     }
 
     private static JsonArray toJSON(Collection<OrderItem> orderItems) {

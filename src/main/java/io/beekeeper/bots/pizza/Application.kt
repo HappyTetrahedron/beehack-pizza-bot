@@ -2,9 +2,12 @@ package io.beekeeper.bots.pizza
 
 import io.beekeeper.bots.pizza.crawler.DieciMenuItem
 import io.beekeeper.bots.pizza.crawler.DieciService
+import io.beekeeper.bots.pizza.extensions.logger
 import java.io.IOException
 
 object Application {
+
+    private val log = logger()
 
     // TODO: Move these out into env variables
     private val BASE_URL = "https://team.beekeeper.io"
@@ -18,7 +21,7 @@ object Application {
         val dieciMenuItemParser = initDieciMenuParser()
         bot.setParser(dieciMenuItemParser)
 
-        println("Starting bot")
+        log.info("Starting bot")
         bot.start()
     }
 
@@ -27,7 +30,7 @@ object Application {
         val dieciService = DieciService()
         dieciService.initializeSession()
         val result = dieciService.fetchAllDieciPages()
-        println("${result.size} menu items found")
+        log.info("${result.size} menu items found")
 
         val mapItems = result
                 .asSequence()
