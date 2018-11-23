@@ -18,8 +18,7 @@ object Application {
     fun main(args: Array<String>) {
         val bot = PizzaBot(BASE_URL, API_TOKEN)
 
-        val dieciMenuItemParser = initDieciMenuParser()
-        bot.setParser(dieciMenuItemParser)
+        bot.parser = initDieciMenuParser()
 
         log.info("Starting bot")
         bot.start()
