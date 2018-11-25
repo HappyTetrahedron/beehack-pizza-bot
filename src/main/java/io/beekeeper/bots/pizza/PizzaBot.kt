@@ -149,8 +149,12 @@ open class PizzaBot(
                 .done {
                     log.debug("Order submission completed")
                     try {
-                        // TODO: Retrieve the wait time from the OrderHelper
-                        sendMessage(chat, "It's all good man. Your food will arrive in approximately 40 minutes.")
+                        if (dryRun) {
+                            sendMessage(chat, "It's all good man. There were no problems running the dry run.")
+                        } else {
+                            // TODO: Retrieve the wait time from the OrderHelper
+                            sendMessage(chat, "It's all good man. Your food will arrive in approximately 40 minutes.")
+                        }
                     } catch (e: MessengerException) {
                         log.error("Failed to send order success message", e)
                     }

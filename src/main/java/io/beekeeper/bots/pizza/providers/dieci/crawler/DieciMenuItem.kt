@@ -1,4 +1,4 @@
-package io.beekeeper.bots.pizza.crawler
+package io.beekeeper.bots.pizza.providers.dieci.crawler
 
 import com.google.gson.annotations.SerializedName
 

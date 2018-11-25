@@ -2,13 +2,13 @@ package io.beekeeper.bots.pizza.providers.dieci
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import io.beekeeper.bots.pizza.crawler.DieciMenuItem
 import io.beekeeper.bots.pizza.dto.OrderItem
 import io.beekeeper.bots.pizza.extensions.logger
 import io.beekeeper.bots.pizza.extensions.mapIf
 import io.beekeeper.bots.pizza.extensions.runAsync
 import io.beekeeper.bots.pizza.ordering.ContactDetails
 import io.beekeeper.bots.pizza.ordering.OrderHelper
+import io.beekeeper.bots.pizza.providers.dieci.crawler.DieciMenuItem
 import io.beekeeper.bots.pizza.shell.ProcessExecutor
 import org.jdeferred2.Promise
 import org.jdeferred2.impl.DeferredObject

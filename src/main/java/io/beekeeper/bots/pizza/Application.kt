@@ -4,12 +4,12 @@ import io.beekeeper.bots.pizza.beekeeper.BeekeeperChatListener
 import io.beekeeper.bots.pizza.beekeeper.BeekeeperContactDetailsProvider
 import io.beekeeper.bots.pizza.beekeeper.BeekeeperMessenger
 import io.beekeeper.bots.pizza.beekeeper.GroupConversationManager
-import io.beekeeper.bots.pizza.crawler.DieciMenuItem
-import io.beekeeper.bots.pizza.crawler.DieciService
 import io.beekeeper.bots.pizza.extensions.logger
 import io.beekeeper.bots.pizza.parser.MenuItemParser
 import io.beekeeper.bots.pizza.providers.dieci.DieciMenuItemParser
 import io.beekeeper.bots.pizza.providers.dieci.DieciOrderHelperFactory
+import io.beekeeper.bots.pizza.providers.dieci.crawler.DieciMenuItem
+import io.beekeeper.bots.pizza.providers.dieci.crawler.DieciService
 import io.beekeeper.sdk.BeekeeperSDK
 import java.io.IOException
 
