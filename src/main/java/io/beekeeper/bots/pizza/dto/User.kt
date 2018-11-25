@@ -1,4 +1,4 @@
-package io.beekeeper.bots.pizza.chatlistener
+package io.beekeeper.bots.pizza.dto
 
 data class User(
         val id: String,

@@ -1,5 +1,8 @@
-package io.beekeeper.bots.pizza.chatlistener
+package io.beekeeper.bots.pizza.beekeeper
 
+import io.beekeeper.bots.pizza.dto.Chat
+import io.beekeeper.bots.pizza.dto.Message
+import io.beekeeper.bots.pizza.dto.User
 import io.beekeeper.sdk.BeekeeperSDK
 import io.beekeeper.sdk.ChatBot
 import io.beekeeper.sdk.model.ConversationMessage
@@ -17,7 +20,9 @@ class BeekeeperChatListener(private val sdk: BeekeeperSDK) {
                             displayName = message.displayName
                     ),
                     text = message.text ?: "",
-                    conversationId = message.conversationId
+                    chat = Chat(
+                            conversationId = message.conversationId
+                    )
             )
             notifySubscribers(messageDTO)
         }

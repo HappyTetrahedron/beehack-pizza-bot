@@ -1,8 +1,6 @@
 package io.beekeeper.bots.pizza
 
-import io.beekeeper.bots.pizza.chatlistener.Message
-import io.beekeeper.bots.pizza.chatlistener.User
-import io.beekeeper.bots.pizza.crawler.DieciMenuItem
+import io.beekeeper.bots.pizza.dto.*
 import io.beekeeper.bots.pizza.extensions.logger
 import io.beekeeper.bots.pizza.extensions.mapIf
 import io.beekeeper.bots.pizza.messenger.Messenger
@@ -17,99 +15,98 @@ import java.util.regex.Pattern
 open class PizzaBot(
         private val messenger: Messenger,
         private val contactDetailsProvider: ContactDetailsProvider,
-        private val parser: Parser<DieciMenuItem>,
+        private val articleParser: Parser<out MenuItem>,
         private val orderHelperFactory: OrderHelperFactory
 ) {
 
-    private var orderSession: OrderSession? = null
+    private val sessionManager = OrderSessionManager()
 
     fun onNewMessage(message: Message) {
-        val conversationId = message.conversationId
         try {
-            processMessage(conversationId, message)
+            processMessage(message.chat, message)
         } catch (e: MessengerException) {
             log.error("Failed to process message", e)
             try {
-                messenger.sendMessage(conversationId, "Something went wrong... sorry")
+                sendMessage(message.chat, "Something went wrong... sorry")
             } catch (e1: MessengerException) {
                 log.error("Failed to apologize", e1)
             }
         }
     }
 
-    private fun processMessage(conversationId: Int, message: Message) {
+    private fun processMessage(chat: Chat, message: Message) {
         if (message.text == "/help") {
-            showHelp(conversationId)
+            showHelp(chat)
         }
 
         if (message.text == "/start") {
-            startOrder(conversationId)
+            startOrder(chat)
             return
         }
 
         val matcher = ITEM_ORDER_PATTERN.matcher(message.text)
         if (matcher.matches()) {
-            if (checkValidSession(conversationId)) {
-                processItemAdding(conversationId, message, matcher.group(1))
+            getSessionOrFail(chat)?.let { session ->
+                processItemAdding(session, message, matcher.group(1))
             }
             return
         }
 
         if (message.text == "/remove") {
-            if (checkValidSession(conversationId)) {
-                processRemovingItem(conversationId, message)
+            getSessionOrFail(chat)?.let { session ->
+                processRemovingItem(session, message)
             }
             return
         }
 
         if (message.text == "/cancel") {
-            if (checkValidSession(conversationId)) {
-                cancelOrder(conversationId)
+            getSessionOrFail(chat)?.let { session ->
+                cancelOrder(session)
             }
             return
         }
 
         if (message.text == "/submit") {
-            if (checkValidSession(conversationId)) {
-                submitOrder(conversationId, message.sender)
+            getSessionOrFail(chat)?.let { session ->
+                submitOrder(session, message.sender)
             }
             return
         }
 
         if (message.text == "/confirm") {
-            if (checkValidSession(conversationId)) {
-                confirmOrder(conversationId, message.sender, dryRun = false)
+            getSessionOrFail(chat)?.let { session ->
+                confirmOrder(session, message.sender, dryRun = false)
             }
             return
         }
 
         if (message.text == "/dryrun") {
-            if (checkValidSession(conversationId)) {
-                confirmOrder(conversationId, message.sender, dryRun = true)
+            getSessionOrFail(chat)?.let { session ->
+                confirmOrder(session, message.sender, dryRun = true)
             }
             return
         }
 
         if (message.text == "/orders") {
-            if (checkValidSession(conversationId)) {
-                showOrders(conversationId)
+            getSessionOrFail(chat)?.let { session ->
+                showOrders(session)
             }
             return
         }
     }
 
-    private fun checkValidSession(conversationId: Int): Boolean {
-        if (orderSession == null || orderSession!!.conversationId != conversationId) {
-            messenger.sendMessage(conversationId, "There is no ongoing order.")
-            return false
+    private fun getSessionOrFail(chat: Chat): OrderSession? {
+        return sessionManager.getSession(chat) ?: run {
+            sendMessage(chat, "There is no ongoing order. You have to /start a new one first.")
+            null
         }
-        return true
     }
 
-    private fun submitOrder(conversationId: Int, sender: User) {
-        val orderItems = orderSession!!.getOrderItems()
+    private fun submitOrder(session: OrderSession, sender: User) {
+        val chat = session.chat
+        val orderItems = session.getOrderItems()
         if (orderItems.isEmpty()) {
-            messenger.sendMessage(conversationId, "Nothing was added to this order yet.")
+            sendMessage(chat, "Nothing was added to this order yet.")
             return
         }
 
@@ -119,100 +116,113 @@ open class PizzaBot(
                 "\n\n" +
                 "Type /confirm to place an order, or /cancel to keep editing your orders."
 
-        orderSession!!.isConfirmationOngoing = true
-        orderSession!!.confirmingUser = sender
-        messenger.sendMessage(conversationId, builder)
+        session.isConfirmationOngoing = true
+        session.confirmingUser = sender
+        sendMessage(chat, builder)
     }
 
-    private fun confirmOrder(conversationId: Int, sender: User, dryRun: Boolean) {
-        if (!orderSession!!.isConfirmationOngoing) {
-            messenger.sendMessage(conversationId, "You first have to /submit your order before you can confirm it.")
+    private fun confirmOrder(session: OrderSession, sender: User, dryRun: Boolean) {
+        val chat = session.chat
+        if (!session.isConfirmationOngoing) {
+            sendMessage(chat, "You first have to /submit your order before you can confirm it.")
             return
         }
 
-        if (sender.id != orderSession!!.confirmingUser?.id) {
-            messenger.sendMessage(conversationId, "Only the user who submitted the order is allowed to confirm it.")
+        if (sender.id != session.confirmingUser?.id) {
+            sendMessage(chat, "Only the user who submitted the order is allowed to confirm it.")
             return
         }
 
-        val orderItems = orderSession!!.getOrderItems()
+        val orderItems = session.getOrderItems()
         val contactDetails = try {
             contactDetailsProvider.getContactDetails(sender.username)
         } catch (e: ContactDetailsException) {
-            messenger.sendMessage(conversationId, "Failed so submit order: ${e.message}")
+            sendMessage(chat, "Failed so submit order: ${e.message}")
             return
         }
 
+        log.debug("Starting to submit the order form")
         // TODO: Change state of orderSession to prevent multiple submissions in parallel
         orderHelperFactory.newOrderHelper()
-                .executeOrder(orderSession!!.getOrderItems(), contactDetails, dryRun)
+                .executeOrder(session.getOrderItems(), contactDetails, dryRun)
                 .done {
+                    log.debug("Order submission completed")
                     try {
-                        messenger.sendMessage(conversationId, "It's all good man")
+                        // TODO: Retrieve the wait time from the OrderHelper
+                        sendMessage(chat, "It's all good man. Your food will arrive in approximately 40 minutes.")
                     } catch (e: MessengerException) {
                         log.error("Failed to send order success message", e)
                     }
                 }
                 .fail {
+                    log.warn("Order submission failed")
                     try {
-                        messenger.sendMessage(conversationId, "Something went wrong")
+                        sendMessage(chat, "Something went wrong")
                     } catch (e: MessengerException) {
                         log.error("Failed to send order failure message", e)
                     }
                 }
 
         if (!dryRun) {
-            // TODO: Only clear session after success
-            orderSession = null
+            // TODO: Only clear session after success, but freeze it during submission
+            sessionManager.deleteSession(session)
         }
 
-        val builder = "Order submitted. Your food will arrive in approximately 40 minutes." +
+        val builder = "Ordering now... Please wait." +
                 "\n\n" +
                 "Order Summary:" +
                 getSummary(orderItems)
-        messenger.sendMessage(conversationId, builder)
+        sendMessage(chat, builder)
     }
 
-    private fun processRemovingItem(conversationId: Int, message: Message) {
-        orderSession!!.removeOrderItems(message.sender)
+    private fun processRemovingItem(session: OrderSession, message: Message) {
+        val chat = session.chat
+        session.removeOrderItems(message.sender)
         val text = "Removed order for ${message.sender.displayName}."
-        messenger.sendEventMessage(conversationId, text)
+        sendEventMessage(chat, text)
     }
 
-    private fun showHelp(conversationId: Int) {
+    private fun showHelp(chat: Chat) {
         val helpText = "/help : show this help\n" +
                 "/start : start a new pizza order\n" +
                 "/cancel : cancel the current pizza order\n" +
                 "/orders : show the currently registered orders\n" +
                 "/order [pizza] : add a pizza with given name to the order\n" +
                 "/remove : remove your order\n" +
-                "/submit : submit the order to Dieci"
-        messenger.sendMessage(conversationId, helpText)
+                "/submit : submit the order (requires confirmation)"
+        sendMessage(chat, helpText)
     }
 
-    private fun showOrders(conversationId: Int) {
-        val orderItems = orderSession!!.getOrderItems()
+    private fun showOrders(session: OrderSession) {
+        val chat = session.chat
+        val orderItems = session.getOrderItems()
         if (orderItems.isEmpty()) {
-            messenger.sendMessage(conversationId, "Nothing was added to this order yet.")
+            sendMessage(chat, "Nothing was added to this order yet.")
             return
         }
-        messenger.sendMessage(conversationId, "Current orders:\n" + getSummary(orderItems))
+        sendMessage(chat, "Current orders:\n" + getSummary(orderItems))
     }
 
     private fun getSummary(orderItems: Collection<OrderItem>): String {
         val builder = StringBuilder()
         var total = 0f
-        for ((user, menuItem) in orderItems) {
+
+        for (orderItem in orderItems) {
+            val price = orderItem.itemPrice
             builder
                     .append("\n- ")
-                    .append(user.displayName)
+                    .append(orderItem.user.displayName)
                     .append(": ")
-                    .append(menuItem.articleName)
-                    .append(" (")
-                    .append(MoneyUtil.formatPrice(menuItem.price))
-                    .append(")")
+                    .append(orderItem.itemName)
+                    .mapIf(price != null) {
+                        it.append(" (")
+                                .append(MoneyUtil.formatPrice(price!!))
+                                .append(")")
+                    }
 
-            total += menuItem.price
+            if (price != null) {
+                total += price
+            }
         }
         builder.append("\n")
                 .append("\n")
@@ -222,22 +232,23 @@ open class PizzaBot(
         return builder.toString()
     }
 
-    private fun processItemAdding(conversationId: Int, message: Message, originalText: String) {
+    private fun processItemAdding(session: OrderSession, message: Message, originalText: String) {
+        val chat = session.chat
         val rawItems = originalText.split(";| and |&|,".toRegex())
 
-        val hadOrderItem = orderSession!!.hasOrderItem(message.sender)
-        orderSession!!.removeOrderItems(message.sender)
+        val hadOrderItem = session.hasOrderItem(message.sender)
+        session.removeOrderItems(message.sender)
 
         val orderedItems = mutableListOf<String>()
 
         for (rawItem in rawItems) {
-            val menuItem = parser.parse(rawItem)
+            val menuItem = articleParser.parse(rawItem)
             if (menuItem == null) {
                 sendItemNotFoundMessageToUser(message, rawItem)
                 continue
             }
 
-            orderSession!!.addOrderItem(message.sender, OrderItem(message.sender, menuItem))
+            session.addOrderItem(message.sender, OrderItem(message.sender, menuItem))
 
             orderedItems.add(menuItem.articleName)
         }
@@ -255,32 +266,41 @@ open class PizzaBot(
             it.plus(", who is a weirdo who likes pineapples on their pizza")
         }
 
-        messenger.sendEventMessage(conversationId, text)
+        sendEventMessage(chat, text)
     }
 
-    private fun startOrder(conversationId: Int) {
-        if (orderSession != null) {
-            messenger.sendMessage(conversationId, "There is already an ongoing order in another chat. Concurrent orders are not yet supported.")
+    private fun startOrder(chat: Chat) {
+        if (sessionManager.getSession(chat) != null) {
+            sendMessage(chat, "There is already an ongoing order.")
             return
         }
 
-        orderSession = OrderSession(conversationId)
-        messenger.sendMessage(conversationId, "Order started. Add items to the order by sending a message starting with /order, e.g., /order Quattro formaggi")
+        sessionManager.createSession(chat)
+        sendMessage(chat, "Order started. Add items to the order by sending a message starting with /order, e.g., /order Quattro formaggi")
     }
 
-    private fun cancelOrder(conversationId: Int) {
-        if (orderSession!!.isConfirmationOngoing) {
-            orderSession!!.isConfirmationOngoing = false
-            orderSession!!.confirmingUser = null
-            messenger.sendMessage(conversationId, "Order submission cancelled. You can now keep changing your order. Once you're happy, simply /submit it again. If you want to stop the order entirely, say /cancel again.")
+    private fun cancelOrder(session: OrderSession) {
+        val chat = session.chat
+        if (session.isConfirmationOngoing) {
+            session.isConfirmationOngoing = false
+            session.confirmingUser = null
+            sendMessage(chat, "Order submission cancelled. You can now keep changing your order. Once you're happy, simply /submit it again. If you want to stop the order entirely, say /cancel again.")
         } else {
-            orderSession = null
-            messenger.sendMessage(conversationId, "Order cancelled. You can always /start a new one.")
+            sessionManager.deleteSession(session)
+            sendMessage(chat, "Order cancelled. You can always /start a new one.")
         }
     }
 
     private fun sendItemNotFoundMessageToUser(message: Message, itemName: String) {
-        messenger.sendMessageToUser(message.sender.username, "No matching pizza found for: $itemName")
+        messenger.sendMessageToUser(message.sender, "No matching pizza found for: $itemName")
+    }
+
+    private fun sendMessage(chat: Chat, text: String) {
+        messenger.sendMessage(chat, text)
+    }
+
+    private fun sendEventMessage(chat: Chat, text: String) {
+        messenger.sendEventMessage(chat, text)
     }
 
     companion object {

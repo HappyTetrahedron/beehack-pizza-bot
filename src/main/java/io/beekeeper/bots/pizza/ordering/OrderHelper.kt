@@ -1,6 +1,6 @@
 package io.beekeeper.bots.pizza.ordering
 
-import io.beekeeper.bots.pizza.OrderItem
+import io.beekeeper.bots.pizza.dto.OrderItem
 import org.jdeferred2.Promise
 
 interface OrderHelper {

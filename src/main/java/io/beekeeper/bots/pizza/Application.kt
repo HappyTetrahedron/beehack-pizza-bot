@@ -1,8 +1,9 @@
 package io.beekeeper.bots.pizza
 
+import io.beekeeper.bots.pizza.beekeeper.BeekeeperChatListener
 import io.beekeeper.bots.pizza.beekeeper.BeekeeperContactDetailsProvider
 import io.beekeeper.bots.pizza.beekeeper.BeekeeperMessenger
-import io.beekeeper.bots.pizza.chatlistener.BeekeeperChatListener
+import io.beekeeper.bots.pizza.beekeeper.GroupConversationManager
 import io.beekeeper.bots.pizza.crawler.DieciMenuItem
 import io.beekeeper.bots.pizza.crawler.DieciService
 import io.beekeeper.bots.pizza.extensions.logger
@@ -18,7 +19,6 @@ object Application {
     private val BASE_URL = "https://team.beekeeper.io"
     private val API_TOKEN = "TODO"
 
-    @Throws(IOException::class)
     @JvmStatic
     fun main(args: Array<String>) {
         setupPizzaBot(BASE_URL, API_TOKEN)
@@ -39,13 +39,13 @@ object Application {
         val bot = PizzaBot(
                 messenger = messenger,
                 contactDetailsProvider = contactDetailsProvider,
-                parser = parser,
+                articleParser = parser,
                 orderHelperFactory = orderHelperFactory
         )
 
         log.info("Registering message listener")
         chatListener.register { message ->
-            if (groupConversationManager.isGroupConversation(message.conversationId) == true) {
+            if (groupConversationManager.isGroupConversation(message.chat.conversationId) == true) {
                 bot.onNewMessage(message)
             }
         }

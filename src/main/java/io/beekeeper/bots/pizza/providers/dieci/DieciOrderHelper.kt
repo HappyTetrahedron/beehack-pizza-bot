@@ -2,7 +2,8 @@ package io.beekeeper.bots.pizza.providers.dieci
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import io.beekeeper.bots.pizza.OrderItem
+import io.beekeeper.bots.pizza.crawler.DieciMenuItem
+import io.beekeeper.bots.pizza.dto.OrderItem
 import io.beekeeper.bots.pizza.extensions.logger
 import io.beekeeper.bots.pizza.extensions.mapIf
 import io.beekeeper.bots.pizza.extensions.runAsync
@@ -59,9 +60,11 @@ class DieciOrderHelper : OrderHelper {
                 }
 
         private fun toJSON(item: OrderItem) = JsonObject().apply {
-            addProperty("articleId", item.menuItem.articleId)
-            addProperty("articleNumber", item.menuItem.parentArticleNumber ?: item.menuItem.articleNumber)
-            addProperty("commodityGroupId", item.menuItem.commodityGroupId)
+            val menuItem = item.menuItem as? DieciMenuItem ?: throw IllegalArgumentException("Not a Dieci item")
+
+            addProperty("articleId", menuItem.articleId)
+            addProperty("articleNumber", menuItem.parentArticleNumber ?: menuItem.articleNumber)
+            addProperty("commodityGroupId", menuItem.commodityGroupId)
         }
 
         private fun toJSON(contactDetails: ContactDetails) = JsonObject().apply {

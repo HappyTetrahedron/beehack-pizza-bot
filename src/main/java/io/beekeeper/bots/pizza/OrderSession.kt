@@ -1,8 +1,10 @@
 package io.beekeeper.bots.pizza
 
-import io.beekeeper.bots.pizza.chatlistener.User
+import io.beekeeper.bots.pizza.dto.Chat
+import io.beekeeper.bots.pizza.dto.OrderItem
+import io.beekeeper.bots.pizza.dto.User
 
-class OrderSession(val conversationId: Int) {
+class OrderSession(val chat: Chat) {
 
     private val orderItems = mutableMapOf<String, MutableList<OrderItem>>()
 

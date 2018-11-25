@@ -1,4 +1,4 @@
-package io.beekeeper.bots.pizza
+package io.beekeeper.bots.pizza.beekeeper
 
 import io.beekeeper.bots.pizza.extensions.logger
 import io.beekeeper.sdk.BeekeeperSDK
