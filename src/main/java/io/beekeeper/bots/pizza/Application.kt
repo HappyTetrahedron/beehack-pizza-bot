@@ -1,8 +1,13 @@
 package io.beekeeper.bots.pizza
 
+import io.beekeeper.bots.pizza.beekeeper.BeekeeperContactDetailsProvider
+import io.beekeeper.bots.pizza.beekeeper.BeekeeperMessenger
+import io.beekeeper.bots.pizza.chatlistener.BeekeeperChatListener
 import io.beekeeper.bots.pizza.crawler.DieciMenuItem
 import io.beekeeper.bots.pizza.crawler.DieciService
 import io.beekeeper.bots.pizza.extensions.logger
+import io.beekeeper.bots.pizza.providers.dieci.DieciOrderHelperFactory
+import io.beekeeper.sdk.BeekeeperSDK
 import java.io.IOException
 
 object Application {
@@ -11,17 +16,40 @@ object Application {
 
     // TODO: Move these out into env variables
     private val BASE_URL = "https://team.beekeeper.io"
-    private val API_TOKEN = "975f909c-7344-4123-89d8-d81b63dc641b"
+    private val API_TOKEN = "TODO"
 
     @Throws(IOException::class)
     @JvmStatic
     fun main(args: Array<String>) {
-        val bot = PizzaBot(BASE_URL, API_TOKEN)
+        setupPizzaBot(BASE_URL, API_TOKEN)
+    }
 
-        bot.parser = initDieciMenuParser()
+    private fun setupPizzaBot(baseUrl: String, apiToken: String) {
+        // Beekeeper stuff
+        val sdk = BeekeeperSDK.newInstance(baseUrl, apiToken)
+        val chatListener = BeekeeperChatListener(sdk)
+        val messenger = BeekeeperMessenger(sdk)
+        val groupConversationManager = GroupConversationManager(sdk)
+        val contactDetailsProvider = BeekeeperContactDetailsProvider(sdk)
 
-        log.info("Starting bot")
-        bot.start()
+        // Dieci stuff
+        val parser = initDieciMenuParser()
+        val orderHelperFactory = DieciOrderHelperFactory()
+
+        val bot = PizzaBot(
+                messenger = messenger,
+                contactDetailsProvider = contactDetailsProvider,
+                parser = parser,
+                orderHelperFactory = orderHelperFactory
+        )
+
+        log.info("Registering message listener")
+        chatListener.register { message ->
+            if (groupConversationManager.isGroupConversation(message.conversationId) == true) {
+                bot.onNewMessage(message)
+            }
+        }
+        chatListener.start()
     }
 
     @Throws(IOException::class)

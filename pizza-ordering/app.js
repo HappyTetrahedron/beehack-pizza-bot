@@ -2,10 +2,6 @@ const puppeteer = require('puppeteer');
 const Dieci = require('./dieci');
 
 const PERSONAL_DATA = {
-    firstName: 'Jimmy',
-    lastName: 'Pizzaiolo',
-    email: 'roland.meyer+jimmy@beekeeper.io',
-    phone: '+41 78 634 46 40',
     company: 'Beekeeper',
     street: 'Hönggerstrasse',
     postalCode: '8037',
@@ -19,7 +15,7 @@ async function initializePuppeteer() {
     return { browser, page };
 }
 
-async function main(orders, doExecute) {
+async function main(orders, contactDetails, dryRun) {
     try {
         browser = await puppeteer.launch({ headless: true });
         const page = await browser.newPage();
@@ -32,8 +28,13 @@ async function main(orders, doExecute) {
         }, Promise.resolve());
 
         await Dieci.goToShoppingCart(page);
-        await Dieci.fillPersonalDataForm(page, PERSONAL_DATA);
-        if (doExecute === '-x') {
+
+        const personalData = Object.assign(PERSONAL_DATA, contactDetails);
+        await Dieci.fillPersonalDataForm(page, personalData);
+        if (dryRun) {
+            console.log('Skipping submit (dry run)');
+        } else {
+            console.log('Submitting order now');
             await Dieci.executeOrder66(page);
         }
 
@@ -52,8 +53,10 @@ async function main(orders, doExecute) {
 
 try {
     const orders = JSON.parse(process.argv[2]);
-    main(orders, process.argv[3]);
+    const contactDetails = JSON.parse(process.argv[3]);
+    const dryRun = process.argv[4] === '-dry';
+    main(orders, contactDetails, dryRun);
 } catch (error) {
     console.error(err);
-    process.exit(1)
+    process.exit(1);
 }

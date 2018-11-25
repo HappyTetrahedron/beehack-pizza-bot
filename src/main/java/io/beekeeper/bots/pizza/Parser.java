@@ -3,7 +3,6 @@ package io.beekeeper.bots.pizza;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,20 +11,13 @@ public class Parser<T> {
     private final Map<String, T> availableItems;
 
     // Knobs to tweak parsing accuracy and strictness
-    private static final int min_words = 1;
-    private static final int min_chars_first_word = 3;
-    private static final int min_chars_subsequent_words = 2;
-    private static final int min_chars_total = 5;
+    private static final int MIN_WORDS = 1;
+    private static final int MIN_CHARS_FIRST_WORD = 3;
+    private static final int MIN_CHARS_SUBSEQUENT_WORDS = 2;
+    private static final int MIN_CHARS_TOTAL = 5;
 
     public Parser(Map<String, T> items) {
         this.availableItems = items;
-    }
-
-    public Parser(List<String> names, List<T> items) {
-        this.availableItems = new HashMap<>();
-        for (int i = 0; i < Math.min(names.size(), items.size()); i++) {
-            availableItems.put(names.get(i), items.get(i));
-        }
     }
 
     public T parse(String message) {
@@ -37,19 +29,19 @@ public class Parser<T> {
                 for (int itemNameWordIdx = 0; itemNameWordIdx < nameParts.length; itemNameWordIdx++) {
 
                     String prefix = commonPrefix(orderParts[orderWordIdx], nameParts[itemNameWordIdx]);
-                    if (prefix.length() >= Math.min(min_chars_first_word, nameParts[itemNameWordIdx].length())) {
+                    if (prefix.length() >= Math.min(MIN_CHARS_FIRST_WORD, nameParts[itemNameWordIdx].length())) {
                         // Forward scanning mode engage!
                         List<String> matches = new ArrayList<>();
                         for (int nn = itemNameWordIdx; nn < nameParts.length; nn++) {
                             if (orderWordIdx - itemNameWordIdx + nn < orderParts.length) {
                                 String nextPrefix = commonPrefix(nameParts[nn], orderParts[orderWordIdx - itemNameWordIdx + nn]);
-                                if (nextPrefix.length() >= Math.min(min_chars_subsequent_words, nameParts[nn].length())) {
+                                if (nextPrefix.length() >= Math.min(MIN_CHARS_SUBSEQUENT_WORDS, nameParts[nn].length())) {
                                     matches.add(nextPrefix);
                                 }
                             }
                         }
-                        if (matches.size() >= Math.min(min_words, nameParts.length)) {
-                            if (countCharsInStringList(matches) >= Math.min(min_chars_total, countCharsInStringList(nameParts))) {
+                        if (matches.size() >= Math.min(MIN_WORDS, nameParts.length)) {
+                            if (countCharsInStringList(matches) >= Math.min(MIN_CHARS_TOTAL, countCharsInStringList(nameParts))) {
                                 matchesFound.add(new MatchData(matches.size(),
                                         countCharsInStringList(matches),
                                         itemNameWordIdx,

@@ -1,24 +1,26 @@
 package io.beekeeper.bots.pizza
 
+import io.beekeeper.bots.pizza.chatlistener.User
+
 class OrderSession(val conversationId: Int) {
 
     private val orderItems = mutableMapOf<String, MutableList<OrderItem>>()
 
     var isConfirmationOngoing = false
-    var confirmingUser: String? = null
+    var confirmingUser: User? = null
 
-    fun hasOrderItem(userId: String): Boolean {
-        return orderItems.containsKey(userId)
+    fun hasOrderItem(user: User): Boolean {
+        return orderItems.containsKey(user.id)
     }
 
-    fun addOrderItem(userId: String, orderItem: OrderItem) {
-        orderItems.getOrPut(userId) { mutableListOf() }.add(orderItem)
+    fun addOrderItem(user: User, orderItem: OrderItem) {
+        orderItems.getOrPut(user.id) { mutableListOf() }.add(orderItem)
     }
 
     fun getOrderItems(): Collection<OrderItem> = orderItems.values.flatten()
 
-    fun removeOrderItems(userId: String) {
-        orderItems.remove(userId)
+    fun removeOrderItems(user: User) {
+        orderItems.remove(user.id)
     }
 
 }

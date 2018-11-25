@@ -1,45 +1,43 @@
 package io.beekeeper.bots.pizza
 
+import io.beekeeper.bots.pizza.chatlistener.Message
+import io.beekeeper.bots.pizza.chatlistener.User
 import io.beekeeper.bots.pizza.crawler.DieciMenuItem
 import io.beekeeper.bots.pizza.extensions.logger
 import io.beekeeper.bots.pizza.extensions.mapIf
+import io.beekeeper.bots.pizza.messenger.Messenger
+import io.beekeeper.bots.pizza.messenger.MessengerException
+import io.beekeeper.bots.pizza.ordering.ContactDetailsException
+import io.beekeeper.bots.pizza.ordering.ContactDetailsProvider
+import io.beekeeper.bots.pizza.ordering.OrderHelperFactory
 import io.beekeeper.bots.pizza.utils.MoneyUtil
-import io.beekeeper.sdk.ChatBot
-import io.beekeeper.sdk.exception.BeekeeperException
-import io.beekeeper.sdk.model.ConversationMessage
 import java.util.regex.Pattern
 
 
-open class PizzaBot(tenantUrl: String, apiToken: String) : ChatBot(tenantUrl, apiToken) {
+open class PizzaBot(
+        private val messenger: Messenger,
+        private val contactDetailsProvider: ContactDetailsProvider,
+        private val parser: Parser<DieciMenuItem>,
+        private val orderHelperFactory: OrderHelperFactory
+) {
 
     private var orderSession: OrderSession? = null
 
-    lateinit var parser: Parser<DieciMenuItem>
-
-    private val groupConversationManager = GroupConversationManager(sdk)
-    private val messenger = Messenger(sdk)
-
-    override fun onNewMessage(message: ConversationMessage, conversationHelper: ChatBot.ConversationHelper) {
+    fun onNewMessage(message: Message) {
         val conversationId = message.conversationId
         try {
-            if (message.text == null) {
-                return
-            }
-            if (groupConversationManager.isGroupConversation(conversationId)) {
-                processGroupMessage(conversationId, message)
-            }
-
-        } catch (e: BeekeeperException) {
+            processMessage(conversationId, message)
+        } catch (e: MessengerException) {
             log.error("Failed to process message", e)
             try {
                 messenger.sendMessage(conversationId, "Something went wrong... sorry")
-            } catch (e1: BeekeeperException) {
+            } catch (e1: MessengerException) {
                 log.error("Failed to apologize", e1)
             }
         }
     }
 
-    private fun processGroupMessage(conversationId: Int, message: ConversationMessage) {
+    private fun processMessage(conversationId: Int, message: Message) {
         if (message.text == "/help") {
             showHelp(conversationId)
         }
@@ -73,21 +71,21 @@ open class PizzaBot(tenantUrl: String, apiToken: String) : ChatBot(tenantUrl, ap
 
         if (message.text == "/submit") {
             if (checkValidSession(conversationId)) {
-                submitOrder(conversationId, message.userId)
+                submitOrder(conversationId, message.sender)
             }
             return
         }
 
         if (message.text == "/confirm") {
             if (checkValidSession(conversationId)) {
-                confirmOrder(conversationId, message.userId, false)
+                confirmOrder(conversationId, message.sender, dryRun = false)
             }
             return
         }
 
         if (message.text == "/dryrun") {
             if (checkValidSession(conversationId)) {
-                confirmOrder(conversationId, message.userId, true)
+                confirmOrder(conversationId, message.sender, dryRun = true)
             }
             return
         }
@@ -108,7 +106,7 @@ open class PizzaBot(tenantUrl: String, apiToken: String) : ChatBot(tenantUrl, ap
         return true
     }
 
-    private fun submitOrder(conversationId: Int, userId: String) {
+    private fun submitOrder(conversationId: Int, sender: User) {
         val orderItems = orderSession!!.getOrderItems()
         if (orderItems.isEmpty()) {
             messenger.sendMessage(conversationId, "Nothing was added to this order yet.")
@@ -122,40 +120,49 @@ open class PizzaBot(tenantUrl: String, apiToken: String) : ChatBot(tenantUrl, ap
                 "Type /confirm to place an order, or /cancel to keep editing your orders."
 
         orderSession!!.isConfirmationOngoing = true
-        orderSession!!.confirmingUser = userId
+        orderSession!!.confirmingUser = sender
         messenger.sendMessage(conversationId, builder)
     }
 
-    private fun confirmOrder(conversationId: Int, userId: String, dryRun: Boolean) {
+    private fun confirmOrder(conversationId: Int, sender: User, dryRun: Boolean) {
         if (!orderSession!!.isConfirmationOngoing) {
             messenger.sendMessage(conversationId, "You first have to /submit your order before you can confirm it.")
             return
         }
 
-        if (userId != orderSession!!.confirmingUser) {
+        if (sender.id != orderSession!!.confirmingUser?.id) {
             messenger.sendMessage(conversationId, "Only the user who submitted the order is allowed to confirm it.")
             return
         }
 
         val orderItems = orderSession!!.getOrderItems()
+        val contactDetails = try {
+            contactDetailsProvider.getContactDetails(sender.username)
+        } catch (e: ContactDetailsException) {
+            messenger.sendMessage(conversationId, "Failed so submit order: ${e.message}")
+            return
+        }
 
-        OrderHelper.executeOrder(orderSession!!.getOrderItems(), dryRun)
+        // TODO: Change state of orderSession to prevent multiple submissions in parallel
+        orderHelperFactory.newOrderHelper()
+                .executeOrder(orderSession!!.getOrderItems(), contactDetails, dryRun)
                 .done {
                     try {
                         messenger.sendMessage(conversationId, "It's all good man")
-                    } catch (e: BeekeeperException) {
+                    } catch (e: MessengerException) {
                         log.error("Failed to send order success message", e)
                     }
                 }
                 .fail {
                     try {
                         messenger.sendMessage(conversationId, "Something went wrong")
-                    } catch (e: BeekeeperException) {
+                    } catch (e: MessengerException) {
                         log.error("Failed to send order failure message", e)
                     }
                 }
 
         if (!dryRun) {
+            // TODO: Only clear session after success
             orderSession = null
         }
 
@@ -166,10 +173,10 @@ open class PizzaBot(tenantUrl: String, apiToken: String) : ChatBot(tenantUrl, ap
         messenger.sendMessage(conversationId, builder)
     }
 
-    private fun processRemovingItem(conversationId: Int, message: ConversationMessage) {
-        orderSession!!.removeOrderItems(message.userId)
-        val text = "Removed order for " + message.displayName + "."
-        messenger.sendConfirmationMessage(conversationId, text)
+    private fun processRemovingItem(conversationId: Int, message: Message) {
+        orderSession!!.removeOrderItems(message.sender)
+        val text = "Removed order for ${message.sender.displayName}."
+        messenger.sendEventMessage(conversationId, text)
     }
 
     private fun showHelp(conversationId: Int) {
@@ -195,10 +202,10 @@ open class PizzaBot(tenantUrl: String, apiToken: String) : ChatBot(tenantUrl, ap
     private fun getSummary(orderItems: Collection<OrderItem>): String {
         val builder = StringBuilder()
         var total = 0f
-        for ((ordererDisplayName, menuItem) in orderItems) {
+        for ((user, menuItem) in orderItems) {
             builder
                     .append("\n- ")
-                    .append(ordererDisplayName)
+                    .append(user.displayName)
                     .append(": ")
                     .append(menuItem.articleName)
                     .append(" (")
@@ -215,11 +222,11 @@ open class PizzaBot(tenantUrl: String, apiToken: String) : ChatBot(tenantUrl, ap
         return builder.toString()
     }
 
-    private fun processItemAdding(conversationId: Int, message: ConversationMessage, originalText: String) {
+    private fun processItemAdding(conversationId: Int, message: Message, originalText: String) {
         val rawItems = originalText.split(";| and |&|,".toRegex())
 
-        val hadOrderItem = orderSession!!.hasOrderItem(message.userId)
-        orderSession!!.removeOrderItems(message.userId)
+        val hadOrderItem = orderSession!!.hasOrderItem(message.sender)
+        orderSession!!.removeOrderItems(message.sender)
 
         val orderedItems = mutableListOf<String>()
 
@@ -230,7 +237,7 @@ open class PizzaBot(tenantUrl: String, apiToken: String) : ChatBot(tenantUrl, ap
                 continue
             }
 
-            orderSession!!.addOrderItem(message.userId, OrderItem(message.displayName, menuItem))
+            orderSession!!.addOrderItem(message.sender, OrderItem(message.sender, menuItem))
 
             orderedItems.add(menuItem.articleName)
         }
@@ -241,14 +248,14 @@ open class PizzaBot(tenantUrl: String, apiToken: String) : ChatBot(tenantUrl, ap
         val orderSummary = orderedItems.joinToString(", ")
 
         val text = if (hadOrderItem) {
-            "Updated order to \"$orderSummary\" for ${message.displayName}"
+            "Updated order to \"$orderSummary\" for ${message.sender.displayName}"
         } else {
-            "Added \"$orderSummary\" to the order for ${message.displayName}"
+            "Added \"$orderSummary\" to the order for ${message.sender.displayName}"
         }.mapIf(orderSummary.contains("hawaii", ignoreCase = true)) {
             it.plus(", who is a weirdo who likes pineapples on their pizza")
         }
 
-        messenger.sendConfirmationMessage(conversationId, text)
+        messenger.sendEventMessage(conversationId, text)
     }
 
     private fun startOrder(conversationId: Int) {
@@ -272,8 +279,8 @@ open class PizzaBot(tenantUrl: String, apiToken: String) : ChatBot(tenantUrl, ap
         }
     }
 
-    private fun sendItemNotFoundMessageToUser(message: ConversationMessage, itemName: String) {
-        messenger.sendMessageToUser(message.username, "No matching pizza found for: $itemName")
+    private fun sendItemNotFoundMessageToUser(message: Message, itemName: String) {
+        messenger.sendMessageToUser(message.sender.username, "No matching pizza found for: $itemName")
     }
 
     companion object {
