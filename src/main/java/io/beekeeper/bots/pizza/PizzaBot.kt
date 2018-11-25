@@ -171,11 +171,12 @@ open class PizzaBot(
                     log.debug("Order submission completed")
                     try {
                         if (dryRun) {
+                            session.state = OrderSession.OrderState.SUBMITTED
                             sendMessage(chat, "It's all good man. There were no problems running the dry run.")
                         } else {
+                            sessionManager.deleteSession(session)
                             // TODO: Retrieve the wait time from the OrderHelper
                             sendMessage(chat, "It's all good man. Your food will arrive in approximately 40 minutes.")
-                            sessionManager.deleteSession(session)
                         }
                     } catch (e: MessengerException) {
                         log.error("Failed to send order success message", e)
@@ -191,7 +192,8 @@ open class PizzaBot(
                     }
                 }
 
-        val builder = "Ordering now... Please wait." +
+        val builder = (if (dryRun) "Performing ordering dry run..." else "Ordering now... ") +
+                "Please wait." +
                 "\n\n" +
                 "Order Summary:" +
                 getSummary(orderItems)
