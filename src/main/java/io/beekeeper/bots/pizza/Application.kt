@@ -7,6 +7,8 @@ import io.beekeeper.bots.pizza.beekeeper.GroupConversationManager
 import io.beekeeper.bots.pizza.crawler.DieciMenuItem
 import io.beekeeper.bots.pizza.crawler.DieciService
 import io.beekeeper.bots.pizza.extensions.logger
+import io.beekeeper.bots.pizza.parser.MenuItemParser
+import io.beekeeper.bots.pizza.providers.dieci.DieciMenuItemParser
 import io.beekeeper.bots.pizza.providers.dieci.DieciOrderHelperFactory
 import io.beekeeper.sdk.BeekeeperSDK
 import java.io.IOException
@@ -15,13 +17,12 @@ object Application {
 
     private val log = logger()
 
-    // TODO: Move these out into env variables
-    private val BASE_URL = "https://team.beekeeper.io"
-    private val API_TOKEN = "TODO"
-
     @JvmStatic
     fun main(args: Array<String>) {
-        setupPizzaBot(BASE_URL, API_TOKEN)
+        setupPizzaBot(
+                baseUrl = getEnvVariable(CONFIG_TENANT_URL),
+                apiToken = getEnvVariable(CONFIG_API_TOKEN)
+        )
     }
 
     private fun setupPizzaBot(baseUrl: String, apiToken: String) {
@@ -33,13 +34,13 @@ object Application {
         val contactDetailsProvider = BeekeeperContactDetailsProvider(sdk)
 
         // Dieci stuff
-        val parser = initDieciMenuParser()
+        val dieciMenuItemParser = initDieciMenuItemParser()
         val orderHelperFactory = DieciOrderHelperFactory()
 
         val bot = PizzaBot(
                 messenger = messenger,
                 contactDetailsProvider = contactDetailsProvider,
-                articleParser = parser,
+                menuItemParser = dieciMenuItemParser,
                 orderHelperFactory = orderHelperFactory
         )
 
@@ -53,7 +54,7 @@ object Application {
     }
 
     @Throws(IOException::class)
-    private fun initDieciMenuParser(): Parser<DieciMenuItem> {
+    private fun initDieciMenuItemParser(): MenuItemParser<DieciMenuItem> {
         val dieciService = DieciService()
         dieciService.initializeSession()
         val result = dieciService.fetchAllDieciPages()
@@ -63,7 +64,13 @@ object Application {
                 .asSequence()
                 .associate { it.key to it }
 
-        return Parser(mapItems)
+        return DieciMenuItemParser(mapItems)
     }
+
+    private fun getEnvVariable(name: String) =
+            System.getenv(name) ?: throw Exception("Env variable $name not set")
+
+    private const val CONFIG_TENANT_URL = "BKPR_TENANT_URL"
+    private const val CONFIG_API_TOKEN = "BKPR_API_TOKEN"
 
 }

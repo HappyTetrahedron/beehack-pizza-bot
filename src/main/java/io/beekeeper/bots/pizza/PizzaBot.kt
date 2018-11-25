@@ -8,6 +8,7 @@ import io.beekeeper.bots.pizza.messenger.MessengerException
 import io.beekeeper.bots.pizza.ordering.ContactDetailsException
 import io.beekeeper.bots.pizza.ordering.ContactDetailsProvider
 import io.beekeeper.bots.pizza.ordering.OrderHelperFactory
+import io.beekeeper.bots.pizza.parser.MenuItemParser
 import io.beekeeper.bots.pizza.utils.MoneyUtil
 import java.util.regex.Pattern
 
@@ -15,7 +16,7 @@ import java.util.regex.Pattern
 open class PizzaBot(
         private val messenger: Messenger,
         private val contactDetailsProvider: ContactDetailsProvider,
-        private val articleParser: Parser<out MenuItem>,
+        private val menuItemParser: MenuItemParser<out MenuItem>,
         private val orderHelperFactory: OrderHelperFactory
 ) {
 
@@ -242,7 +243,7 @@ open class PizzaBot(
         val orderedItems = mutableListOf<String>()
 
         for (rawItem in rawItems) {
-            val menuItem = articleParser.parse(rawItem)
+            val menuItem = menuItemParser.parse(rawItem)
             if (menuItem == null) {
                 sendItemNotFoundMessageToUser(message, rawItem)
                 continue

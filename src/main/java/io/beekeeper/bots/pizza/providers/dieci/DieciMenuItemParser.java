@@ -1,4 +1,4 @@
-package io.beekeeper.bots.pizza;
+package io.beekeeper.bots.pizza.providers.dieci;
 
 import java.text.Normalizer;
 import java.util.ArrayList;
@@ -6,7 +6,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class Parser<T> {
+import org.jetbrains.annotations.NotNull;
+
+import io.beekeeper.bots.pizza.dto.MenuItem;
+import io.beekeeper.bots.pizza.parser.MenuItemParser;
+
+public class DieciMenuItemParser<T extends MenuItem> implements MenuItemParser<T> {
 
     private final Map<String, T> availableItems;
 
@@ -16,11 +21,12 @@ public class Parser<T> {
     private static final int MIN_CHARS_SUBSEQUENT_WORDS = 2;
     private static final int MIN_CHARS_TOTAL = 5;
 
-    public Parser(Map<String, T> items) {
+    public DieciMenuItemParser(Map<String, T> items) {
         this.availableItems = items;
     }
 
-    public T parse(String message) {
+    @Override
+    public T parse(@NotNull String message) {
         List<MatchData> matchesFound = new ArrayList<>();
         String[] orderParts = normalizeAndSplit(message);
         for (String itemName : availableItems.keySet()) {
