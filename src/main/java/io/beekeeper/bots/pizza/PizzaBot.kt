@@ -105,6 +105,19 @@ open class PizzaBot(
 
     private fun submitOrder(session: OrderSession, sender: User) {
         val chat = session.chat
+
+        when (session.state) {
+            OrderSession.OrderState.SUBMITTED -> {
+                sendMessage(chat, "The order was already submitted.")
+                return
+            }
+            OrderSession.OrderState.CONFIRMED -> {
+                sendMessage(chat, "The order was already confirmed.")
+                return
+            }
+            else -> Unit
+        }
+
         val orderItems = session.getOrderItems()
         if (orderItems.isEmpty()) {
             sendMessage(chat, "Nothing was added to this order yet.")
@@ -117,20 +130,28 @@ open class PizzaBot(
                 "\n\n" +
                 "Type /confirm to place an order, or /cancel to keep editing your orders."
 
-        session.isConfirmationOngoing = true
+        session.state = OrderSession.OrderState.SUBMITTED
         session.confirmingUser = sender
         sendMessage(chat, builder)
     }
 
     private fun confirmOrder(session: OrderSession, sender: User, dryRun: Boolean) {
         val chat = session.chat
-        if (!session.isConfirmationOngoing) {
-            sendMessage(chat, "You first have to /submit your order before you can confirm it.")
-            return
+        when (session.state) {
+            OrderSession.OrderState.OPEN -> {
+                sendMessage(chat, "You first have to /submit your order before you can confirm it.")
+                return
+            }
+            OrderSession.OrderState.CONFIRMED -> {
+                sendMessage(chat, "The order was already confirmed.")
+                return
+            }
+            else -> Unit
         }
 
         if (sender.id != session.confirmingUser?.id) {
-            sendMessage(chat, "Only the user who submitted the order is allowed to confirm it.")
+            val name = session.confirmingUser!!.displayName
+            sendMessage(chat, "Only $name is allowed to confirm this order as they are the one who submitted it.")
             return
         }
 
@@ -143,7 +164,7 @@ open class PizzaBot(
         }
 
         log.debug("Starting to submit the order form")
-        // TODO: Change state of orderSession to prevent multiple submissions in parallel
+        session.state = OrderSession.OrderState.CONFIRMED
         orderHelperFactory.newOrderHelper()
                 .executeOrder(session.getOrderItems(), contactDetails, dryRun)
                 .done {
@@ -154,6 +175,7 @@ open class PizzaBot(
                         } else {
                             // TODO: Retrieve the wait time from the OrderHelper
                             sendMessage(chat, "It's all good man. Your food will arrive in approximately 40 minutes.")
+                            sessionManager.deleteSession(session)
                         }
                     } catch (e: MessengerException) {
                         log.error("Failed to send order success message", e)
@@ -161,17 +183,13 @@ open class PizzaBot(
                 }
                 .fail {
                     log.warn("Order submission failed")
+                    session.state = OrderSession.OrderState.OPEN
                     try {
-                        sendMessage(chat, "Something went wrong")
+                        sendMessage(chat, "Something went wrong while sending the order... Please check the logs.")
                     } catch (e: MessengerException) {
                         log.error("Failed to send order failure message", e)
                     }
                 }
-
-        if (!dryRun) {
-            // TODO: Only clear session after success, but freeze it during submission
-            sessionManager.deleteSession(session)
-        }
 
         val builder = "Ordering now... Please wait." +
                 "\n\n" +
@@ -182,6 +200,19 @@ open class PizzaBot(
 
     private fun processRemovingItem(session: OrderSession, message: Message) {
         val chat = session.chat
+
+        when (session.state) {
+            OrderSession.OrderState.SUBMITTED -> {
+                sendMessage(chat, "The order was already submitted. No items can be removed from it.")
+                return
+            }
+            OrderSession.OrderState.CONFIRMED -> {
+                sendMessage(chat, "The order was already confirmed. No items can be removed from it.")
+                return
+            }
+            else -> Unit
+        }
+
         session.removeOrderItems(message.sender)
         val text = "Removed order for ${message.sender.displayName}."
         sendEventMessage(chat, text)
@@ -239,6 +270,19 @@ open class PizzaBot(
 
     private fun processItemAdding(session: OrderSession, message: Message, originalText: String) {
         val chat = session.chat
+
+        when (session.state) {
+            OrderSession.OrderState.SUBMITTED -> {
+                sendMessage(chat, "The order was already submitted. No items can be added to it.")
+                return
+            }
+            OrderSession.OrderState.CONFIRMED -> {
+                sendMessage(chat, "The order was already confirmed. No items can be added to it.")
+                return
+            }
+            else -> Unit
+        }
+
         val rawItems = originalText.split(";| and |&|,".toRegex())
 
         val hadOrderItem = session.hasOrderItem(message.sender)
@@ -286,13 +330,20 @@ open class PizzaBot(
 
     private fun cancelOrder(session: OrderSession) {
         val chat = session.chat
-        if (session.isConfirmationOngoing) {
-            session.isConfirmationOngoing = false
-            session.confirmingUser = null
-            sendMessage(chat, "Order submission cancelled. You can now keep changing your order. Once you're happy, simply /submit it again. If you want to stop the order entirely, say /cancel again.")
-        } else {
-            sessionManager.deleteSession(session)
-            sendMessage(chat, "Order cancelled. You can always /start a new one.")
+
+        when (session.state) {
+            OrderSession.OrderState.OPEN -> {
+                sessionManager.deleteSession(session)
+                sendMessage(chat, "Order cancelled. You can always /start a new one.")
+            }
+            OrderSession.OrderState.SUBMITTED -> {
+                session.state = OrderSession.OrderState.OPEN
+                session.confirmingUser = null
+                sendMessage(chat, "Order submission cancelled. You can now keep changing your order. Once you're happy, simply /submit it again. If you want to stop the order entirely, say /cancel again.")
+            }
+            OrderSession.OrderState.CONFIRMED -> {
+                sendMessage(chat, "The order was already confirmed and can no longer be cancelled.")
+            }
         }
     }
 

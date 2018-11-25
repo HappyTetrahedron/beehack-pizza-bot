@@ -8,7 +8,8 @@ class OrderSession(val chat: Chat) {
 
     private val orderItems = mutableMapOf<String, MutableList<OrderItem>>()
 
-    var isConfirmationOngoing = false
+    var state: OrderState = OrderState.OPEN
+
     var confirmingUser: User? = null
 
     fun hasOrderItem(user: User): Boolean {
@@ -23,6 +24,14 @@ class OrderSession(val chat: Chat) {
 
     fun removeOrderItems(user: User) {
         orderItems.remove(user.id)
+    }
+
+    enum class OrderState {
+
+        OPEN,
+        SUBMITTED,
+        CONFIRMED
+
     }
 
 }
