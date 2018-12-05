@@ -15,7 +15,7 @@ async function initializePuppeteer() {
     return { browser, page };
 }
 
-async function main(orders, contactDetails, dryRun) {
+async function main(orders, contactDetails, creditCard, dryRun) {
     try {
         browser = await puppeteer.launch({ headless: true });
         const page = await browser.newPage();
@@ -30,7 +30,7 @@ async function main(orders, contactDetails, dryRun) {
         await Dieci.goToShoppingCart(page);
 
         const personalData = Object.assign(PERSONAL_DATA, contactDetails);
-        await Dieci.fillPersonalDataForm(page, personalData);
+        await Dieci.fillPersonalDataForm(page, personalData, creditCard);
         if (dryRun) {
             console.log('Skipping submit (dry run)');
         } else {
@@ -54,8 +54,9 @@ async function main(orders, contactDetails, dryRun) {
 try {
     const orders = JSON.parse(process.argv[2]);
     const contactDetails = JSON.parse(process.argv[3]);
-    const dryRun = process.argv[4] === '-dry';
-    main(orders, contactDetails, dryRun);
+    const creditCard = JSON.parse(process.argv[4]);
+    const dryRun = process.argv[5] === '-dry';
+    main(orders, contactDetails, creditCard, dryRun);
 } catch (error) {
     console.error(err);
     process.exit(1);

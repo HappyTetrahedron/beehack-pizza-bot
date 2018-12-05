@@ -2,6 +2,7 @@ package io.beekeeper.bots.pizza.providers.dieci
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import io.beekeeper.bots.pizza.dto.CreditCard
 import io.beekeeper.bots.pizza.dto.OrderItem
 import io.beekeeper.bots.pizza.extensions.logger
 import io.beekeeper.bots.pizza.extensions.mapIf
@@ -15,9 +16,9 @@ import org.jdeferred2.impl.DeferredObject
 
 class DieciOrderHelper : OrderHelper {
 
-    override fun executeOrder(orderItems: Collection<OrderItem>, contactDetails: ContactDetails, dryRun: Boolean): Promise<Unit, Unit, Unit> {
+    override fun executeOrder(orderItems: Collection<OrderItem>, contactDetails: ContactDetails, creditCard: CreditCard?, dryRun: Boolean): Promise<Unit, Unit, Unit> {
         val deferred = DeferredObject<Unit, Unit, Unit>()
-        val command = generateCommand(orderItems, contactDetails, dryRun)
+        val command = generateCommand(orderItems, contactDetails, creditCard, dryRun)
         runAsync {
             try {
                 log.info("command = $command")
@@ -44,12 +45,13 @@ class DieciOrderHelper : OrderHelper {
 
         private val log = logger()
 
-        private fun generateCommand(orderItems: Collection<OrderItem>, contactDetails: ContactDetails, dryRun: Boolean) =
+        private fun generateCommand(orderItems: Collection<OrderItem>, contactDetails: ContactDetails, creditCard: CreditCard?, dryRun: Boolean) =
                 listOf(
                         "node",
                         "pizza-ordering/app.js",
                         toJSON(orderItems).toString(),
-                        toJSON(contactDetails).toString()
+                        toJSON(contactDetails).toString(),
+                        creditCard?.let { toJSON(it).toString() } ?: "null"
                 ).mapIf(dryRun) {
                     it.plus("-dry")
                 }
@@ -72,6 +74,11 @@ class DieciOrderHelper : OrderHelper {
             addProperty("lastName", contactDetails.lastName)
             addProperty("email", contactDetails.emailAddress)
             addProperty("phone", contactDetails.phoneNumber)
+        }
+
+        private fun toJSON(creditCard: CreditCard) = JsonObject().apply {
+            addProperty("name", creditCard.name)
+            // TODO
         }
 
     }

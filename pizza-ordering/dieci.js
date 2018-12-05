@@ -52,7 +52,7 @@ module.exports = {
         await page.waitForSelector('[name="order_comment"]', { visible: true, timeout: 10000 });
     },
 
-    async fillPersonalDataForm(page, personalData) {
+    async fillPersonalDataForm(page, personalData, creditCard) {
         console.log('Filling in personal data form');
 
         await page.type('#firstname', personalData.firstName);
@@ -74,6 +74,13 @@ module.exports = {
         await page.waitFor(1000)
         await page.type('#input_street', String.fromCharCode(13));
         await page.type('#input_streetnumber', personalData.streetNumber);
+
+        if (creditCard) {
+            await page.waitFor(1000)
+            console.log("selecting credit card");
+            await page.click('label[for="cb_payment_30"]')
+            await page.waitFor(1000)
+        }
 
         await page.click('label[for="radio_delivery_now_1"]')
         await page.click('input[name="docut"]')

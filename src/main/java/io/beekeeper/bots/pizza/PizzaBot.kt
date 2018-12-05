@@ -163,10 +163,12 @@ open class PizzaBot(
             return
         }
 
+        val creditCard = if (dryRun) CreditCard("THIS IS A TEST") else null
+
         log.debug("Starting to submit the order form")
         session.state = OrderSession.OrderState.CONFIRMED
         orderHelperFactory.newOrderHelper()
-                .executeOrder(session.getOrderItems(), contactDetails, dryRun)
+                .executeOrder(session.getOrderItems(), contactDetails, creditCard, dryRun)
                 .done {
                     log.debug("Order submission completed")
                     try {
@@ -192,7 +194,7 @@ open class PizzaBot(
                     }
                 }
 
-        val builder = (if (dryRun) "Performing ordering dry run..." else "Ordering now... ") +
+        val builder = (if (dryRun) "Performing ordering dry run... " else "Ordering now... ") +
                 "Please wait." +
                 "\n\n" +
                 "Order Summary:" +
