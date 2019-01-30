@@ -10,6 +10,7 @@ import io.beekeeper.bots.pizza.ordering.ContactDetailsProvider
 import io.beekeeper.bots.pizza.ordering.OrderHelperFactory
 import io.beekeeper.bots.pizza.parser.MenuItemParser
 import io.beekeeper.bots.pizza.utils.MoneyUtil
+import java.io.File
 import java.util.regex.Pattern
 
 
@@ -163,7 +164,7 @@ open class PizzaBot(
             return
         }
 
-        val creditCard = if (dryRun) CreditCard("THIS IS A TEST") else null
+        val creditCard = null //if (dryRun) CreditCard("THIS IS A TEST") else null
 
         log.debug("Starting to submit the order form")
         session.state = OrderSession.OrderState.CONFIRMED
@@ -174,10 +175,12 @@ open class PizzaBot(
                     try {
                         if (dryRun) {
                             session.state = OrderSession.OrderState.SUBMITTED
+                            sendImage(chat, File("form.png"))
                             sendMessage(chat, "It's all good man. There were no problems running the dry run.")
                         } else {
                             sessionManager.deleteSession(session)
                             // TODO: Retrieve the wait time from the OrderHelper
+                            sendImage(chat, File("final.png"))
                             sendMessage(chat, "It's all good man. Your food will arrive in approximately 40 minutes.")
                         }
                     } catch (e: MessengerException) {
@@ -361,6 +364,10 @@ open class PizzaBot(
 
     private fun sendEventMessage(chat: Chat, text: String) {
         messenger.sendEventMessage(chat, text)
+    }
+
+    private fun sendImage(chat: Chat, image: File) {
+        messenger.sendImage(chat, image)
     }
 
     companion object {

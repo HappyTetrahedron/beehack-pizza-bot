@@ -49,8 +49,6 @@ async function main(orders, contactDetails, creditCard, dryRun) {
 }
 
 
-// console.log(JSON.stringify(orders));
-
 try {
     const orders = JSON.parse(process.argv[2]);
     const contactDetails = JSON.parse(process.argv[3]);

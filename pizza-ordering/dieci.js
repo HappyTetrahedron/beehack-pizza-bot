@@ -71,21 +71,19 @@ module.exports = {
         await page.waitFor(1000)
         await page.type('#input_city', String.fromCharCode(13));
         await page.type('#input_street', personalData.street);
-        await page.waitFor(1000)
+        await page.waitFor(2000)
         await page.type('#input_street', String.fromCharCode(13));
         await page.type('#input_streetnumber', personalData.streetNumber);
-
-        if (creditCard) {
-            await page.waitFor(1000)
-            console.log("selecting credit card");
-            await page.click('label[for="cb_payment_30"]')
-            await page.waitFor(1000)
-        }
 
         await page.click('label[for="radio_delivery_now_1"]')
         await page.click('input[name="docut"]')
 
-        await page.click('label[for="cb_payment_1"]')
+        if (creditCard) {
+            console.log('Selecting credit card');
+            await page.click('label[for="cb_payment_30"]')
+        } else {
+            await page.click('label[for="cb_payment_1"]')
+        }
         await page.click('#cb_agb_warning')
 
         await page.screenshot({ path: 'form.png', fullPage: true });
